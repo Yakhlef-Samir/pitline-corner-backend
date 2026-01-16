@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: pitline-corner-backend
+    env: python
+    plan: starter
+    region: oregon
+    branch: main
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    autoDeploy: true
+    healthCheckPath: "/health"
+    envVars:
+      - key: DATABASE_URL
+        value: "postgresql+asyncpg://pitline_corner_db_user:S10Lwj71ZvAqVmoMO0KaxHe2eQJxPK50@dpg-d5lbnb24d50c73e3ven0-a/pitline_corner_db"
+      - key: REDIS_URL
+        value: "rediss://default:AYmnAAIncDE4ODg1YWNkNDUyODA0NDIyOTk4Y2Q3Yzc1NjkyOTgyZnAxMzUyMzk@allowing-pony-35239.upstash.io:6379"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: BACKEND_CORS_ORIGINS
+        value: "[https://pitline-corner-frontend.vercel.app, http://localhost:3000, http://localhost:5173]"
+      - key: SERVER_HOST
+        value: "https://pitline-corner-backend.onrender.com"

@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = [
         "http://localhost:3000",  # Frontend development
         "http://localhost:5173",  # Vite dev server
+        "https://pitline-corner-frontend.vercel.app",  # Vercel production
     ]
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
