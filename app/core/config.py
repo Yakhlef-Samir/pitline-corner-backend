@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
     
     SERVER_NAME: str = "localhost"
-    SERVER_HOST: AnyHttpUrl = "http://localhost"
+    SERVER_HOST: str = "http://localhost"
     
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost:4200","http://localhost:3000"]'
