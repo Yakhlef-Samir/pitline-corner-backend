@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     # Test database
     TEST_DATABASE_URL: Optional[str] = None
 
+    # Monitoring
+    SENTRY_DSN: Optional[str] = None
+    SENTRY_ENVIRONMENT: str = "production"
+
     model_config = {"env_file": ".env"}
 
 

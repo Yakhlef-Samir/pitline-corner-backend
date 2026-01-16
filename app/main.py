@@ -1,7 +1,37 @@
+import logging
+import structlog
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.api_v1.api import api_router
+
+def configure_logging():
+    structlog.configure(
+        processors=[
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.add_log_level,
+            structlog.processors.JSONRenderer(),
+        ],
+        wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
+    )
+
+
+def configure_sentry():
+    if settings.SENTRY_DSN:
+        sentry_sdk.init(
+            dsn=settings.SENTRY_DSN,
+            integrations=[FastApiIntegration(transaction_style="url")],
+            environment=settings.SENTRY_ENVIRONMENT,
+            traces_sample_rate=1.0,
+            send_default_pii=True,
+        )
+
+
+configure_logging()
+configure_sentry()
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
