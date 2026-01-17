@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -5,6 +6,9 @@ from jose import jwt
 from passlib.context import CryptContext
 
 from app.core.config import settings
+
+# Disable bcrypt wrap bug detection to avoid 72-byte limit issue
+os.environ["PASSLIB_BCRYPT_BUG_WORKAROUND"] = "1"
 
 pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
 
