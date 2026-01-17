@@ -11,10 +11,8 @@ from sqlalchemy.orm import sessionmaker
 from app.core.database import Base, get_db
 from app.main import app
 
-# Test database URL - use environment variable or fallback to PostgreSQL
-TEST_DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/test_db"
-)
+# Test database URL - use SQLite for tests to avoid PostgreSQL connection issues
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 # Create test engine
 test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
@@ -33,7 +31,7 @@ async def override_get_db():
 app.dependency_overrides[get_db] = override_get_db
 
 
-@pytest_asyncio.fixture(autouse=True)
+@pytest_asyncio.fixture(scope="function")
 async def setup_database():
     """Set up test database before each test"""
     async with test_engine.begin() as conn:
@@ -43,8 +41,8 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
 
 
-@pytest_asyncio.fixture
-async def client():
+@pytest_asyncio.fixture(scope="function")
+async def client(setup_database):
     """Create async test client"""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
