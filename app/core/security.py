@@ -6,23 +6,17 @@ from passlib.context import CryptContext
 
 from app.core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def _truncate_password(password: str) -> str:
-    """bcrypt limite à 72 octets ; on tronque proprement pour éviter les erreurs."""
-    # bcrypt travaille en bytes ; on tronque côté str avant encodage
-    return password[:72]
+pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against a hash"""
-    return pwd_context.verify(_truncate_password(plain_password), hashed_password)
+    return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    """Hash a password using bcrypt"""
-    return pwd_context.hash(_truncate_password(password))
+    """Hash a password using bcrypt_sha256"""
+    return pwd_context.hash(password)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
