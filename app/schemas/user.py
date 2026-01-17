@@ -30,3 +30,22 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: Optional[str] = None
+
+
+class UserPublic(BaseModel):
+    """Public user information returned in API responses"""
+
+    id: int
+    email: EmailStr
+    tier: str
+
+    class Config:
+        from_attributes = True
+
+
+class AuthData(BaseModel):
+    """Authentication response data containing token and user info"""
+
+    access_token: str
+    token_type: str = "bearer"
+    user: UserPublic

@@ -122,28 +122,28 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# BMad workflow files and artifacts
-_bmad/
-_bmad-output/
-*.bmad
-*.bmw
-*.bmm
+# # BMad workflow files and artifacts
+# _bmad/
+# _bmad-output/
+# *.bmad
+# *.bmw
+# *.bmm
 
-# BMad temporary files
-*.tmp
-*.temp
-.cache/
-.temp/
+# # BMad temporary files
+# *.tmp
+# *.temp
+# .cache/
+# .temp/
 
-# BMad logs and debug files
-*.debug
-*.trace
-bmad-*.log
-bmad-*.debug
+# # BMad logs and debug files
+# *.debug
+# *.trace
+# bmad-*.log
+# bmad-*.debug
 
-# BMad configuration files (keep local)
-bmad-config.yaml
-bmad-settings.json
+# # BMad configuration files (keep local)
+# bmad-config.yaml
+# bmad-settings.json
 
 # IDE
 .vscode/
