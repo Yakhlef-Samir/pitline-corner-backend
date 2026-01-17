@@ -7,10 +7,10 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = "your-secret-key-change-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
-    
+
     SERVER_NAME: str = "localhost"
     SERVER_HOST: str = "http://localhost"
-    
+
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost:4200","http://localhost:3000"]'
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = [
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     PROJECT_NAME: str = "Pitline Corner"
     VERSION: str = "1.0.0"
-    
+
     # Database
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_USER: str = "postgres"
@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     def assemble_db_connection(cls, v: Optional[str], info) -> Any:
         if isinstance(v, str):
             return v
-        values = info.data if hasattr(info, 'data') else {}
+        values = info.data if hasattr(info, "data") else {}
         return PostgresDsn.build(
             scheme="postgresql+asyncpg",
             user=values.get("POSTGRES_USER", "postgres"),
@@ -56,7 +56,7 @@ class Settings(BaseSettings):
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
-    
+
     # Test database
     TEST_DATABASE_URL: Optional[str] = None
 

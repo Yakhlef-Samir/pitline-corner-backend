@@ -1,9 +1,10 @@
 import os
 import sys
 
+
 def test_project_structure():
     """Test that all required directories and files exist"""
-    
+
     required_dirs = [
         "app",
         "app/api",
@@ -16,9 +17,9 @@ def test_project_structure():
         "app/utils",
         "alembic",
         "alembic/versions",
-        "tests"
+        "tests",
     ]
-    
+
     required_files = [
         "app/main.py",
         "app/core/config.py",
@@ -34,73 +35,74 @@ def test_project_structure():
         ".gitignore",
         ".env.example",
         "pyproject.toml",
-        "Dockerfile"
+        "Dockerfile",
     ]
-    
+
     print("🔍 Testing project structure...")
-    
+
     # Test directories
     missing_dirs = []
     for dir_path in required_dirs:
         if not os.path.exists(dir_path):
             missing_dirs.append(dir_path)
-    
+
     if missing_dirs:
         print(f"❌ Missing directories: {missing_dirs}")
         return False
     else:
         print("✅ All required directories exist")
-    
+
     # Test files
     missing_files = []
     for file_path in required_files:
         if not os.path.exists(file_path):
             missing_files.append(file_path)
-    
+
     if missing_files:
         print(f"❌ Missing files: {missing_files}")
         return False
     else:
         print("✅ All required files exist")
-    
+
     # Test Python imports
     try:
-        sys.path.append('.')
+        sys.path.append(".")
         print("🔍 Testing Python imports...")
-        
+
         # Test main app structure
-        with open('app/main.py', 'r') as f:
+        with open("app/main.py", "r") as f:
             content = f.read()
             print(f"📄 Main.py content preview: {content[:200]}...")
-            if 'FastAPI' in content:
+            if "FastAPI" in content:
                 print("✅ FastAPI import found")
             else:
                 print("❌ FastAPI import missing")
                 return False
-                
-            if 'uvicorn.run' in content:
+
+            if "uvicorn.run" in content:
                 print("✅ uvicorn.run found")
             else:
                 print("❌ uvicorn.run missing")
                 return False
-                
+
             print("✅ Main app structure looks correct")
-        
+
         # Test config structure
-        with open('app/core/config.py', 'r') as f:
+        with open("app/core/config.py", "r") as f:
             content = f.read()
-            if 'BaseSettings' in content and 'DATABASE_URL' in content:
+            if "BaseSettings" in content and "DATABASE_URL" in content:
                 print("✅ Config structure looks correct")
             else:
                 print("❌ Config structure issue")
                 return False
-        
+
         print("✅ All Python structure tests passed")
         return True
-        
+
     except Exception as e:
         print(f"❌ Error testing Python structure: {e}")
         return False
+
 
 if __name__ == "__main__":
     success = test_project_structure()
