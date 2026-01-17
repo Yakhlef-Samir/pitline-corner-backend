@@ -20,3 +20,7 @@ services:
         value: "[https://pitline-corner-frontend.vercel.app, http://localhost:3000, http://localhost:5173]"
       - key: SERVER_HOST
         value: "https://pitline-corner-backend.onrender.com"
+      - key: SENTRY_DSN
+        value: "https://cf548e7f2e9d092b5e1a882addfdfb31@o4510722664562688.ingest.de.sentry.io/4510722811560016"
+      - key: SENTRY_ENVIRONMENT
+        value: "production"
