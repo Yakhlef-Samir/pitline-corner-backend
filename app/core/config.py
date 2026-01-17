@@ -19,6 +19,8 @@ class Settings(BaseSettings):
         "http://localhost:5173",  # Vite dev server
         "https://pitline-corner-frontend.vercel.app",  # Vercel production
         "https://saas-f1-rqlb.vercel.app",  # Vercel preview
+        "http://localhost:8080",  # Alternative dev port
+        "https://localhost:5173",  # HTTPS localhost
     ]
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
