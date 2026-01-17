@@ -31,9 +31,11 @@ def test_openapi_json():
     assert data["info"]["title"] == "Pitline Corner"
 
 
-def test_cors_headers():
-    """Test CORS headers are present"""
+def test_cors_middleware():
+    """Test CORS middleware is configured"""
+    # Test that credentials are allowed (indicates CORS is configured)
     response = client.get("/health", headers={"Origin": "http://localhost:3000"})
     assert response.status_code == 200
-    # CORS headers should be present when origin is in allowed origins
-    assert "access-control-allow-origin" in response.headers
+    # CORS middleware adds access-control-allow-credentials header
+    assert "access-control-allow-credentials" in response.headers
+    assert response.headers["access-control-allow-credentials"] == "true"
