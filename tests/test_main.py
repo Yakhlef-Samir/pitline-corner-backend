@@ -33,6 +33,7 @@ def test_openapi_json():
 
 def test_cors_headers():
     """Test CORS headers are present"""
-    response = client.options("/health")
+    response = client.get("/health", headers={"Origin": "http://localhost:3000"})
     assert response.status_code == 200
-    # CORS headers should be present
+    # CORS headers should be present when origin is in allowed origins
+    assert "access-control-allow-origin" in response.headers
