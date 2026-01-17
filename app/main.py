@@ -43,6 +43,23 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
 
+
+@app.on_event("startup")
+async def startup_event():
+    """Run database migrations on startup"""
+    try:
+        from alembic import command
+        from alembic.config import Config
+
+        alembic_cfg = Config("alembic.ini")
+        command.upgrade(alembic_cfg, "head")
+    except Exception as e:
+        import structlog
+
+        logger = structlog.get_logger()
+        logger.error("Failed to run migrations", error=str(e))
+
+
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
