@@ -39,7 +39,7 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client():
     """Create async test client"""
     transport = ASGITransport(app=app)
