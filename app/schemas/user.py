@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class UserBase(BaseModel):
@@ -9,23 +9,22 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=8)
-    password_confirm: str = Field(..., min_length=8)
+    password: str
+    password_confirm: str
 
 
 class UserResponse(UserBase):
     id: int
-    is_active: bool
-    tier: str
-    created_at: datetime
+    tier: str = "freemium"
+    is_active: bool = True
+    is_superuser: bool = False
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Token(BaseModel):
     access_token: str
-    token_type: str = "bearer"
+    token_type: str
 
 
 class TokenData(BaseModel):
@@ -39,8 +38,7 @@ class UserPublic(BaseModel):
     email: EmailStr
     tier: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AuthData(BaseModel):
