@@ -1,5 +1,6 @@
 """Tests for authentication endpoints"""
 
+import os
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -9,8 +10,11 @@ from sqlalchemy.orm import sessionmaker
 from app.core.database import Base, get_db
 from app.main import app
 
-# Test database URL - use SQLite for tests
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# Test database URL - use environment variable or fallback to PostgreSQL
+TEST_DATABASE_URL = os.getenv(
+    "DATABASE_URL", 
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/test_db"
+)
 
 # Create test engine
 test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
