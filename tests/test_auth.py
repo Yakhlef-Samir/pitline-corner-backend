@@ -11,8 +11,8 @@ from sqlalchemy.orm import sessionmaker
 from app.core.database import Base, get_db
 from app.main import app
 
-# Test database URL - use SQLite for tests to avoid PostgreSQL connection issues
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# Test database URL - use environment variable for CI, SQLite for local
+TEST_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
 # Create test engine
 test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
