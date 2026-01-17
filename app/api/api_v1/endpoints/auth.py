@@ -14,7 +14,9 @@ router = APIRouter()
 
 
 @router.post(
-    "/register", response_model=ApiResponse[AuthData], status_code=status.HTTP_201_CREATED
+    "/register",
+    response_model=ApiResponse[AuthData],
+    status_code=status.HTTP_201_CREATED,
 )
 async def register(
     user_in: UserCreate,
@@ -33,7 +35,12 @@ async def register(
     if user_in.password != user_in.password_confirm:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": {"code": "PASSWORD_MISMATCH", "message": "Les mots de passe ne correspondent pas"}},
+            detail={
+                "error": {
+                    "code": "PASSWORD_MISMATCH",
+                    "message": "Les mots de passe ne correspondent pas",
+                }
+            },
         )
 
     # Check if user already exists
@@ -41,7 +48,12 @@ async def register(
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": {"code": "EMAIL_EXISTS", "message": "Cet email est déjà utilisé"}},
+            detail={
+                "error": {
+                    "code": "EMAIL_EXISTS",
+                    "message": "Cet email est déjà utilisé",
+                }
+            },
         )
 
     # Create user
