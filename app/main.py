@@ -1,11 +1,13 @@
 import logging
-import structlog
+
 import sentry_sdk
-from sentry_sdk.integrations.fastapi import FastApiIntegration
+import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.config import settings
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+
 from app.api.api_v1.api import api_router
+from app.core.config import settings
 
 
 def configure_logging():

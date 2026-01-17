@@ -3,8 +3,8 @@
 Basic test to verify FastAPI app can be created and configured correctly
 """
 
-import sys
 import os
+import sys
 
 # Add the project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
