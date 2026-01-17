@@ -28,7 +28,7 @@ python_classes = "Test*"
 python_functions = "test_*"
 
 [tool.black]
-line-length = 79
+line-length = 88
 target-version = ['py311']
 include = '\.pyi?$'
 extend-exclude = '''
@@ -52,10 +52,10 @@ include_trailing_comma = True
 force_grid_wrap = 0
 use_parentheses = True
 ensure_newline_before_comments = True
-line_length = 79
+line_length = 88
 
 [tool.flake8]
-max-line-length = 79
+max-line-length = 88
 extend-ignore = ["E203", "W503"]
 exclude = [
     ".git",
