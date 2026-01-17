@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 
 import sentry_sdk
 import structlog
@@ -36,16 +37,8 @@ configure_logging()
 configure_sentry()
 
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    description="Virtual Pit Wall - Backend API",
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-)
-
-
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """Create database tables on startup"""
     try:
         from app.core.database import engine
@@ -60,6 +53,19 @@ async def startup_event():
 
         logger = structlog.get_logger()
         logger.error("Failed to create tables", error=str(e))
+
+    yield
+
+    # Cleanup (if needed) goes here
+
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description="Virtual Pit Wall - Backend API",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan,
+)
 
 
 # Set all CORS enabled origins
