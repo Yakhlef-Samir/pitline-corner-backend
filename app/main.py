@@ -46,18 +46,20 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup_event():
-    """Run database migrations on startup"""
+    """Create database tables on startup"""
     try:
-        from alembic import command
-        from alembic.config import Config
+        from app.core.database import engine
+        from app.models import User
 
-        alembic_cfg = Config("alembic.ini")
-        command.upgrade(alembic_cfg, "head")
+        async with engine.begin() as conn:
+            from app.core.database import Base
+
+            await conn.run_sync(Base.metadata.create_all)
     except Exception as e:
         import structlog
 
         logger = structlog.get_logger()
-        logger.error("Failed to run migrations", error=str(e))
+        logger.error("Failed to create tables", error=str(e))
 
 
 # Set all CORS enabled origins
