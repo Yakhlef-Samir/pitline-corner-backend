@@ -10,17 +10,19 @@ services:
     autoDeploy: true
     healthCheckPath: "/health"
     envVars:
+      # IMPORTANT: Set these values in the Render Dashboard, NOT here!
+      # These are placeholders - actual secrets must be configured via Render UI
       - key: DATABASE_URL
-        value: "postgresql+asyncpg://pitline_corner_db_user:S10Lwj71ZvAqVmoMO0KaxHe2eQJxPK50@dpg-d5lbnb24d50c73e3ven0-a/pitline_corner_db"
+        sync: false  # Set in Render Dashboard
       - key: REDIS_URL
-        value: "rediss://default:AYmnAAIncDE4ODg1YWNkNDUyODA0NDIyOTk4Y2Q3Yzc1NjkyOTgyZnAxMzUyMzk@allowing-pony-35239.upstash.io:6379"
+        sync: false  # Set in Render Dashboard
       - key: SECRET_KEY
         generateValue: true
       - key: BACKEND_CORS_ORIGINS
         value: "[https://pitline-corner-frontend.vercel.app, http://localhost:3000, http://localhost:5173]"
       - key: SERVER_HOST
-        value: "https://pitline-corner-backend.onrender.com"
+        sync: false  # Set in Render Dashboard
       - key: SENTRY_DSN
-        value: "https://cf548e7f2e9d092b5e1a882addfdfb31@o4510722664562688.ingest.de.sentry.io/4510722811560016"
+        sync: false  # Set in Render Dashboard
       - key: SENTRY_ENVIRONMENT
         value: "production"

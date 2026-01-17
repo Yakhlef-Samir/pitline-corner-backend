@@ -173,3 +173,4 @@ dump.rdb
 
 # Docker
 .dockerignore
+nul
