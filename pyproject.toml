@@ -19,7 +19,7 @@ classifiers = [
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q --strict-markers"
+addopts = "-ra -q --strict-markers --timeout=30"
 testpaths = [
     "tests",
 ]

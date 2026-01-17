@@ -7,12 +7,17 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import create_access_token
 from app.crud import create_user, get_user_by_email
-from app.schemas.user import Token, UserCreate, UserResponse
+from app.schemas.common import ApiResponse
+from app.schemas.user import AuthData, UserCreate, UserPublic
 
 router = APIRouter()
 
 
-@router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=ApiResponse[AuthData],
+    status_code=status.HTTP_201_CREATED,
+)
 async def register(
     user_in: UserCreate,
     db: AsyncSession = Depends(get_db),
@@ -23,12 +28,19 @@ async def register(
     - **email**: Valid email address
     - **password**: Password (min 8 characters)
     - **password_confirm**: Password confirmation (must match)
+
+    Returns wrapped response with user info and JWT token.
     """
     # Validate password confirmation
     if user_in.password != user_in.password_confirm:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": {"code": "PASSWORD_MISMATCH"}},
+            detail={
+                "error": {
+                    "code": "PASSWORD_MISMATCH",
+                    "message": "Les mots de passe ne correspondent pas",
+                }
+            },
         )
 
     # Check if user already exists
@@ -36,7 +48,12 @@ async def register(
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": {"code": "EMAIL_EXISTS"}},
+            detail={
+                "error": {
+                    "code": "EMAIL_EXISTS",
+                    "message": "Cet email est déjà utilisé",
+                }
+            },
         )
 
     # Create user
@@ -48,4 +65,11 @@ async def register(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    # Build response with user info
+    auth_data = AuthData(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserPublic.model_validate(user),
+    )
+
+    return ApiResponse(data=auth_data)

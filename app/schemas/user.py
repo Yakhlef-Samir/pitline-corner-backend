@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class UserBase(BaseModel):
@@ -15,18 +15,35 @@ class UserCreate(UserBase):
 
 class UserResponse(UserBase):
     id: int
-    is_active: bool
-    tier: str
-    created_at: datetime
+    tier: str = "freemium"
+    is_active: bool = True
+    is_superuser: bool = False
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Token(BaseModel):
     access_token: str
-    token_type: str = "bearer"
+    token_type: str
 
 
 class TokenData(BaseModel):
     email: Optional[str] = None
+
+
+class UserPublic(BaseModel):
+    """Public user information returned in API responses"""
+
+    id: int
+    email: EmailStr
+    tier: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AuthData(BaseModel):
+    """Authentication response data containing token and user info"""
+
+    access_token: str
+    token_type: str = "bearer"
+    user: UserPublic
