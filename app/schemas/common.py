@@ -9,7 +9,9 @@ T = TypeVar("T")
 class MetaInfo(BaseModel):
     """Metadata for API responses"""
 
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
 
 
 class ApiResponse(BaseModel, Generic[T]):

@@ -249,7 +249,10 @@ def verify_acceptance_criteria():
     if os.path.exists("app/main.py"):
         with open("app/main.py", "r") as f:
             content = f.read()
-            if '@app.get("/health")' in content and '"status": "ok"' in content:
+            if (
+                '@app.get("/health")' in content
+                and '"status": "ok"' in content
+            ):
                 print("✅ Health endpoint configured to return 200 OK")
             else:
                 print("❌ Health endpoint not properly configured")
