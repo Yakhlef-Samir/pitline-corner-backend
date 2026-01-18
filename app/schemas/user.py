@@ -37,6 +37,11 @@ class UserPublic(BaseModel):
     id: int
     email: EmailStr
     tier: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    display_name: Optional[str] = None
+    country: Optional[str] = None
+    favorite_f1_team: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

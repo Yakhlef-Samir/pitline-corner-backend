@@ -43,16 +43,66 @@ async def lifespan(app: FastAPI):
     try:
         from app.core.database import engine
         from app.models import User
+        from sqlalchemy import text
 
         async with engine.begin() as conn:
             from app.core.database import Base
 
+            # Create all tables
             await conn.run_sync(Base.metadata.create_all)
+
+            # Add new columns if they don't exist (for existing tables)
+            await conn.execute(
+                text(
+                    """
+                DO $$
+                BEGIN
+                    -- Add profile columns if they don't exist
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                 WHERE table_name='users' AND column_name='first_name') THEN
+                        ALTER TABLE users ADD COLUMN first_name VARCHAR(100);
+                    END IF;
+                    
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                 WHERE table_name='users' AND column_name='last_name') THEN
+                        ALTER TABLE users ADD COLUMN last_name VARCHAR(100);
+                    END IF;
+                    
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                 WHERE table_name='users' AND column_name='display_name') THEN
+                        ALTER TABLE users ADD COLUMN display_name VARCHAR(100);
+                    END IF;
+                    
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                 WHERE table_name='users' AND column_name='country') THEN
+                        ALTER TABLE users ADD COLUMN country VARCHAR(50);
+                    END IF;
+                    
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                 WHERE table_name='users' AND column_name='favorite_f1_team') THEN
+                        ALTER TABLE users ADD COLUMN favorite_f1_team VARCHAR(50);
+                    END IF;
+                    
+                    -- Create indexes if they don't exist
+                    IF NOT EXISTS (SELECT 1 FROM pg_indexes 
+                                 WHERE tablename='users' AND indexname='idx_users_display_name') THEN
+                        CREATE INDEX idx_users_display_name ON users(display_name);
+                    END IF;
+                    
+                    IF NOT EXISTS (SELECT 1 FROM pg_indexes 
+                                 WHERE tablename='users' AND indexname='idx_users_favorite_team') THEN
+                        CREATE INDEX idx_users_favorite_team ON users(favorite_f1_team);
+                    END IF;
+                END $$;
+            """
+                )
+            )
+
     except Exception as e:
         import structlog
 
         logger = structlog.get_logger()
-        logger.error("Failed to create tables", error=str(e))
+        logger.error("Failed to create/update tables", error=str(e))
 
     yield
 
