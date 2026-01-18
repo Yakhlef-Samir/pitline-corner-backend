@@ -41,9 +41,10 @@ configure_sentry()
 async def lifespan(app: FastAPI):
     """Create database tables on startup"""
     try:
+        from sqlalchemy import text
+
         from app.core.database import engine
         from app.models import User
-        from sqlalchemy import text
 
         async with engine.begin() as conn:
             from app.core.database import Base
