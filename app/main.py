@@ -41,9 +41,10 @@ configure_sentry()
 async def lifespan(app: FastAPI):
     """Create database tables on startup"""
     try:
+        from sqlalchemy import text
+
         from app.core.database import engine
         from app.models import User
-        from sqlalchemy import text
 
         async with engine.begin() as conn:
             from app.core.database import Base
@@ -52,9 +53,7 @@ async def lifespan(app: FastAPI):
             await conn.run_sync(Base.metadata.create_all)
 
             # Add new columns if they don't exist (for existing tables)
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                 DO $$
                 BEGIN
                     -- Add profile columns if they don't exist
@@ -94,9 +93,7 @@ async def lifespan(app: FastAPI):
                         CREATE INDEX idx_users_favorite_team ON users(favorite_f1_team);
                     END IF;
                 END $$;
-            """
-                )
-            )
+            """))
 
     except Exception as e:
         import structlog
