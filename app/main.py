@@ -50,9 +50,11 @@ async def lifespan(app: FastAPI):
 
             # Create all tables
             await conn.run_sync(Base.metadata.create_all)
-            
+
             # Add new columns if they don't exist (for existing tables)
-            await conn.execute(text("""
+            await conn.execute(
+                text(
+                    """
                 DO $$
                 BEGIN
                     -- Add profile columns if they don't exist
@@ -92,8 +94,10 @@ async def lifespan(app: FastAPI):
                         CREATE INDEX idx_users_favorite_team ON users(favorite_f1_team);
                     END IF;
                 END $$;
-            """))
-            
+            """
+                )
+            )
+
     except Exception as e:
         import structlog
 
