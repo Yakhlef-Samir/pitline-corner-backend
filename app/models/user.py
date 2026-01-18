@@ -25,9 +25,7 @@ class User(Base):
         String(100), nullable=True
     )
     country: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    favorite_f1_team: Mapped[Optional[str]] = mapped_column(
-        String(50), nullable=True
-    )
+    favorite_f1_team: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
     # System fields
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
