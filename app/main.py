@@ -52,9 +52,7 @@ async def lifespan(app: FastAPI):
             await conn.run_sync(Base.metadata.create_all)
 
             # Add new columns if they don't exist (for existing tables)
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                 DO $$
                 BEGIN
                     -- Add profile columns if they don't exist
@@ -94,9 +92,7 @@ async def lifespan(app: FastAPI):
                         CREATE INDEX idx_users_favorite_team ON users(favorite_f1_team);
                     END IF;
                 END $$;
-            """
-                )
-            )
+            """))
 
     except Exception as e:
         import structlog
@@ -122,9 +118,7 @@ app = FastAPI(
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            str(origin) for origin in settings.BACKEND_CORS_ORIGINS
-        ],
+        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

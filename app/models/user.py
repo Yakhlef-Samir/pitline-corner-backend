@@ -15,29 +15,17 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255))
 
     # Profile fields
-    first_name: Mapped[Optional[str]] = mapped_column(
-        String(100), nullable=True
-    )
-    last_name: Mapped[Optional[str]] = mapped_column(
-        String(100), nullable=True
-    )
-    display_name: Mapped[Optional[str]] = mapped_column(
-        String(100), nullable=True
-    )
+    first_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    display_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     country: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    favorite_f1_team: Mapped[Optional[str]] = mapped_column(
-        String(50), nullable=True
-    )
+    favorite_f1_team: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
     # System fields
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
-    tier: Mapped[str] = mapped_column(
-        String(50), default="freemium", nullable=False
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow
-    )
+    tier: Mapped[str] = mapped_column(String(50), default="freemium", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime, default=None, onupdate=datetime.utcnow
     )
