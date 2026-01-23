@@ -1,3 +1,7 @@
+
+
+
+
 """F1 API endpoints - cleaned minimal version"""
 from typing import Optional
 
@@ -17,6 +21,12 @@ from app.services.f1 import (
     pit_stop_service
 )
 from app.services.fastf1_optimized import fastf1_service
+from app.services.strategy import (
+    pit_stop_calculator,
+    overtake_calculator,
+    defense_calculator,
+    weather_calculator
+)
 
 router = APIRouter()
 
@@ -181,4 +191,91 @@ async def import_race_data(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": {"code": "IMPORT_ERROR", "message": str(e)}}
+        )
+
+
+# Strategy Time Machine endpoints
+@router.get("/simulations/pit-stop")
+async def simulate_pit_stop_strategy(
+    race_id: int = Query(..., description="Race ID"),
+    driver_id: int = Query(..., description="Driver ID"),
+    alternative_stop_lap: int = Query(..., description="Alternative pit stop lap"),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Simulate alternative pit stop strategy"""
+    try:
+        result = await pit_stop_calculator.calculate_alternative_strategy(
+            db, race_id, driver_id, alternative_stop_lap
+        )
+        return ApiResponse(data=result.__dict__)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": {"code": "INVALID_INPUT", "message": str(e)}}
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": {"code": "SIMULATION_ERROR", "message": str(e)}}
+        )
+
+
+@router.get("/simulations/overtake")
+async def simulate_overtake_strategy(
+    race_id: int = Query(..., description="Race ID"),
+    driver_id: int = Query(..., description="Driver ID"),
+    target_driver_id: int = Query(..., description="Target driver to overtake"),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Analyze overtaking opportunities"""
+    try:
+        result = await overtake_calculator.analyze_overtake_opportunities(
+            db, race_id, driver_id, target_driver_id
+        )
+        return ApiResponse(data=result.__dict__)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": {"code": "SIMULATION_ERROR", "message": str(e)}}
+        )
+
+
+@router.get("/simulations/defend")
+async def simulate_defense_strategy(
+    race_id: int = Query(..., description="Race ID"),
+    driver_id: int = Query(..., description="Driver ID"),
+    attacking_driver_id: int = Query(..., description="Attacking driver ID"),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Calculate defense position strategy"""
+    try:
+        result = await defense_calculator.calculate_defense_strategy(
+            db, race_id, driver_id, attacking_driver_id
+        )
+        return ApiResponse(data=result.__dict__)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": {"code": "SIMULATION_ERROR", "message": str(e)}}
+        )
+
+
+@router.get("/simulations/weather")
+async def simulate_weather_strategy(
+    race_id: int = Query(..., description="Race ID"),
+    driver_id: int = Query(..., description="Driver ID"),
+    current_weather: str = Query(..., description="Current weather"),
+    expected_weather: str = Query(..., description="Expected weather"),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Calculate weather adaptation strategy"""
+    try:
+        result = await weather_calculator.calculate_weather_strategy(
+            db, race_id, driver_id, current_weather, expected_weather
+        )
+        return ApiResponse(data=result.__dict__)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": {"code": "SIMULATION_ERROR", "message": str(e)}}
         )

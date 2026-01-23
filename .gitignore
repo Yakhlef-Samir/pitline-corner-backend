@@ -174,3 +174,7 @@ dump.rdb
 # Docker
 .dockerignore
 nul
+
+# Documentation and markdown files
+*.md
+!README.md

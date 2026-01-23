@@ -26,15 +26,26 @@ RACES_2024 = [
 async def import_latest():
     """Import latest race"""
     year = 2024
+    count = 0
+    max_races = 24  # Import first 24 races
 
-    # Find next race to import (simple logic)
+    # Import multiple races
     async with AsyncSessionLocal() as db:
         for round_num, gp_name in RACES_2024:
-            print(f"Trying {gp_name}...")
-            success = await fastf1_service.import_race(db, year, round_num, gp_name)
-            if success:
-                print(f"✓ Imported {gp_name}")
+            if count >= max_races:
+                print(f"\nCompleted: Imported {count} races")
                 break
+
+            try:
+                print(f"[{count+1}/{max_races}] Importing {gp_name}...", end=" ", flush=True)
+                success = await fastf1_service.import_race(db, year, round_num, gp_name)
+                if success:
+                    print("OK")
+                    count += 1
+                else:
+                    print("SKIP (not available yet)")
+            except Exception as e:
+                print(f"ERROR: {str(e)[:50]}")
 
 
 if __name__ == "__main__":

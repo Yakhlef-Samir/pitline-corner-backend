@@ -96,8 +96,21 @@ class FastF1Service:
             race = result.scalar_one_or_none()
 
             if not race:
-                print(f"Race not found in DB")
-                return False
+                # Create race if it doesn't exist
+                print(f"Creating race {gp_name}...")
+                race = Race(
+                    season=year,
+                    round=round_num,
+                    name=f"{gp_name} Grand Prix",
+                    circuit_id=round_num,  # Use round as circuit ID (will match with pre-created circuits)
+                    country=gp_name,
+                    date=session.event['Session1Date'] if 'Session1Date' in session.event else datetime.now(),
+                    status="completed",
+                    data_imported=False
+                )
+                db.add(race)
+                await db.commit()
+                print(f"Created race: {race.name} (ID: {race.id})")
 
             # Import laps
             laps = session.laps
