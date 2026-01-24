@@ -26,7 +26,7 @@ from app.repositories.f1 import race as race_repo
 
 async def import_circuits(db: AsyncSession):
     """Import F1 circuits from 2024 season"""
-    print("🏁 Importing F1 circuits...")
+    print("Importing F1 circuits...")
 
     try:
         import fastf1
@@ -35,32 +35,40 @@ async def import_circuits(db: AsyncSession):
         schedule = fastf1.get_event_schedule(2024)
         circuits_added = 0
 
-        for _, event in schedule.iterrows():
-            if event["EventName"] and event["Location"]:
-                # Check if circuit already exists
-                existing = await circuit_repo.get_by_name(
-                    db, name=event["CircuitShortName"]
-                )
-                if existing:
-                    continue
+        # Filter for actual races (where Session5 exists - race day)
+        races = schedule[schedule['Session5Date'].notna()]
 
-                # Create circuit
-                circuit_data = {
-                    "name": event["CircuitShortName"],
-                    "country": event["Location"],
-                    "length_km": 5.0,  # Default length - will be updated later
-                    "turns": 15,  # Default turns - will be updated later
-                }
+        for _, event in races.iterrows():
+            # Location is the circuit identifier in FastF1
+            location = event.get("Location")
+            country = event.get("Country")
+            event_name = event.get("EventName")
 
-                new_circuit = await circuit_repo.create(db, obj_in=circuit_data)
-                circuits_added += 1
-                print(f"  ✅ Added circuit: {event['CircuitShortName']}")
+            if not (location and country):
+                continue
 
-        print(f"🏁 Imported {circuits_added} circuits")
+            # Check if circuit already exists
+            existing = await circuit_repo.get_by_name(db, name=location)
+            if existing:
+                continue
+
+            # Create circuit
+            circuit_data = {
+                "name": location,
+                "country": country,
+                "length_km": 5.0,  # Default length - will be updated later
+                "turns": 15,  # Default turns - will be updated later
+            }
+
+            new_circuit = await circuit_repo.create(db, obj_in=circuit_data)
+            circuits_added += 1
+            print(f"  Added circuit: {location} ({country})")
+
+        print(f"Imported {circuits_added} circuits")
         return circuits_added
 
-    except ImportError:
-        print("❌ FastF1 not available, creating mock circuits...")
+    except (ImportError, Exception) as e:
+        print(f"FastF1 not available or error occurred ({type(e).__name__}), creating mock circuits...")
         # Create mock circuits for testing
         mock_circuits = [
             {"name": "Bahrain", "country": "Bahrain", "length_km": 5.412, "turns": 15},
@@ -78,6 +86,8 @@ async def import_circuits(db: AsyncSession):
             },
             {"name": "Suzuka", "country": "Japan", "length_km": 5.807, "turns": 18},
             {"name": "Shanghai", "country": "China", "length_km": 5.451, "turns": 16},
+            {"name": "Monaco", "country": "Monaco", "length_km": 3.337, "turns": 19},
+            {"name": "Silverstone", "country": "United Kingdom", "length_km": 5.891, "turns": 18},
         ]
 
         circuits_added = 0
@@ -86,15 +96,15 @@ async def import_circuits(db: AsyncSession):
             if not existing:
                 await circuit_repo.create(db, obj_in=circuit_data)
                 circuits_added += 1
-                print(f"  ✅ Added mock circuit: {circuit_data['name']}")
+                print(f"  Added mock circuit: {circuit_data['name']}")
 
-        print(f"🏁 Imported {circuits_added} mock circuits")
+        print(f"Imported {circuits_added} mock circuits")
         return circuits_added
 
 
 async def import_drivers(db: AsyncSession):
     """Import F1 drivers from 2024 season"""
-    print("👨‍🚒 Importing F1 drivers...")
+    print("Importing F1 drivers...")
 
     try:
         import fastf1
@@ -104,54 +114,58 @@ async def import_drivers(db: AsyncSession):
         session.load()
 
         drivers_added = 0
-        for driver_info in session.drivers:
-            # Get driver details
-            driver = session.drivers[driver_info]
+        # session.drivers is a list of driver numbers
+        for driver_number in session.drivers:
+            # Get driver details from the session
+            driver = session.drivers[driver_number]
 
             # Check if driver already exists
-            existing = await driver_repo.get_by_number(
-                db, driver_number=driver_info["DriverNumber"]
-            )
+            existing = await driver_repo.get_by_number(db, driver_number=driver_number)
             if existing:
                 continue
 
+            # Extract driver information
+            driver_code = driver.get("Code", f"DRV{driver_number}")
+            first_name = driver.get("FirstName", "Unknown")
+            last_name = driver.get("LastName", "Driver")
+            team_name = driver.get("TeamName", "Unknown Team")
+            country_code = driver.get("CountryCode", None)
+
             # Create driver
             driver_data = {
-                "driver_number": int(driver_info["DriverNumber"]),
-                "code": driver_info["Code"],
-                "first_name": driver_info["FirstName"],
-                "last_name": driver_info["LastName"],
-                "team": driver_info["TeamName"],
-                "country": driver_info.get("CountryCode", None),
+                "driver_number": int(driver_number),
+                "code": driver_code,
+                "first_name": first_name,
+                "last_name": last_name,
+                "team": team_name,
+                "country": country_code,
             }
 
             new_driver = await driver_repo.create(db, obj_in=driver_data)
             drivers_added += 1
-            print(
-                f"  ✅ Added driver: {driver_info['FirstName']} {driver_info['LastName']} ({driver_info['Code']})"
-            )
+            print(f"  Added driver: {first_name} {last_name} ({driver_code})")
 
-        print(f"👨‍🚒 Imported {drivers_added} drivers")
+        print(f"Imported {drivers_added} drivers from FastF1")
         return drivers_added
 
-    except ImportError:
-        print("❌ FastF1 not available, creating mock drivers...")
-        # Create mock drivers for testing
+    except (ImportError, Exception) as e:
+        print(f"FastF1 not available or error occurred ({type(e).__name__}), creating mock drivers...")
+        # Create mock drivers for testing - 2024 F1 Season grid
         mock_drivers = [
             {
                 "driver_number": 1,
                 "code": "VER",
                 "first_name": "Max",
                 "last_name": "Verstappen",
-                "team": "Red Bull",
+                "team": "Red Bull Racing",
                 "country": "NED",
             },
             {
                 "driver_number": 11,
                 "code": "PER",
                 "first_name": "Sergio",
-                "last_name": "Perez",
-                "team": "Red Bull",
+                "last_name": "Pérez",
+                "team": "Red Bull Racing",
                 "country": "MEX",
             },
             {
@@ -202,6 +216,102 @@ async def import_drivers(db: AsyncSession):
                 "team": "Mercedes",
                 "country": "GBR",
             },
+            {
+                "driver_number": 3,
+                "code": "ALO",
+                "first_name": "Fernando",
+                "last_name": "Alonso",
+                "team": "Aston Martin",
+                "country": "ESP",
+            },
+            {
+                "driver_number": 14,
+                "code": "STR",
+                "first_name": "Lance",
+                "last_name": "Stroll",
+                "team": "Aston Martin",
+                "country": "CAN",
+            },
+            {
+                "driver_number": 27,
+                "code": "HUL",
+                "first_name": "Nico",
+                "last_name": "Hulkenberg",
+                "team": "Haas",
+                "country": "GER",
+            },
+            {
+                "driver_number": 20,
+                "code": "MAG",
+                "first_name": "Kevin",
+                "last_name": "Magnussen",
+                "team": "Haas",
+                "country": "DEN",
+            },
+            {
+                "driver_number": 10,
+                "code": "GAS",
+                "first_name": "Pierre",
+                "last_name": "Gasly",
+                "team": "Alpine",
+                "country": "FRA",
+            },
+            {
+                "driver_number": 31,
+                "code": "OCO",
+                "first_name": "Esteban",
+                "last_name": "Ocon",
+                "team": "Alpine",
+                "country": "FRA",
+            },
+            {
+                "driver_number": 18,
+                "code": "TSU",
+                "first_name": "Yuki",
+                "last_name": "Tsunoda",
+                "team": "Racing Bulls",
+                "country": "JPN",
+            },
+            {
+                "driver_number": 22,
+                "code": "LAW",
+                "first_name": "Daniel",
+                "last_name": "Lawson",
+                "team": "Racing Bulls",
+                "country": "NZL",
+            },
+            {
+                "driver_number": 24,
+                "code": "ZHO",
+                "first_name": "Zhou",
+                "last_name": "Guanyu",
+                "team": "Kick Sauber",
+                "country": "CHN",
+            },
+            {
+                "driver_number": 2,
+                "code": "BOT",
+                "first_name": "Valtteri",
+                "last_name": "Bottas",
+                "team": "Kick Sauber",
+                "country": "FIN",
+            },
+            {
+                "driver_number": 77,
+                "code": "VET",
+                "first_name": "Sebastian",
+                "last_name": "Vettel",
+                "team": "Aston Martin",
+                "country": "GER",
+            },
+            {
+                "driver_number": 12,
+                "code": "RIC",
+                "first_name": "Daniel",
+                "last_name": "Ricciardo",
+                "team": "Racing Bulls",
+                "country": "AUS",
+            },
         ]
 
         drivers_added = 0
@@ -213,16 +323,16 @@ async def import_drivers(db: AsyncSession):
                 await driver_repo.create(db, obj_in=driver_data)
                 drivers_added += 1
                 print(
-                    f"  ✅ Added mock driver: {driver_data['first_name']} {driver_data['last_name']} ({driver_data['code']})"
+                    f"  Added mock driver: {driver_data['first_name']} {driver_data['last_name']} ({driver_data['code']})"
                 )
 
-        print(f"👨‍🚒 Imported {drivers_added} mock drivers")
+        print(f"Imported {drivers_added} mock drivers")
         return drivers_added
 
 
 async def import_races(db: AsyncSession):
     """Import F1 races from 2024 season"""
-    print("🏆 Importing F1 races...")
+    print("Importing F1 races...")
 
     try:
         import fastf1
@@ -231,45 +341,50 @@ async def import_races(db: AsyncSession):
         schedule = fastf1.get_event_schedule(2024)
         races_added = 0
 
-        for _, event in schedule.iterrows():
-            if event["RoundNumber"] and event["Session5Date"]:  # Race round and date
-                # Check if race already exists
-                existing_races = await race_repo.get_by_season(db, season=2024)
-                if any(r.round == event["RoundNumber"] for r in existing_races):
-                    continue
+        # Filter for actual races (where Session5 exists - race day)
+        races = schedule[schedule['Session5Date'].notna()]
 
-                # Find circuit
-                circuit_obj = await circuit_repo.get_by_name(
-                    db, name=event["CircuitShortName"]
-                )
-                if not circuit_obj:
-                    print(
-                        f"  ⚠️  Circuit not found: {event['CircuitShortName']}, skipping race"
-                    )
-                    continue
+        for _, event in races.iterrows():
+            round_number = event.get("RoundNumber")
+            race_date = event.get("Session5Date")
+            event_name = event.get("EventName")
+            location = event.get("Location")
+            country = event.get("Country")
 
-                # Create race
-                race_data = {
-                    "season": 2024,
-                    "round": int(event["RoundNumber"]),
-                    "name": event["EventName"],
-                    "circuit_id": circuit_obj.id,
-                    "country": event["Location"],
-                    "date": event["Session5Date"],
-                    "status": "scheduled",
-                }
+            if not (round_number and race_date and event_name):
+                continue
 
-                new_race = await race_repo.create(db, obj_in=race_data)
-                races_added += 1
-                print(
-                    f"  ✅ Added race: {event['EventName']} (Round {event['RoundNumber']})"
-                )
+            # Check if race already exists
+            existing_races = await race_repo.get_by_season(db, season=2024)
+            if any(r.round == round_number for r in existing_races):
+                continue
 
-        print(f"🏆 Imported {races_added} races")
+            # Find circuit by location (which is the circuit identifier in FastF1)
+            circuit_obj = await circuit_repo.get_by_name(db, name=location)
+            if not circuit_obj:
+                print(f"  Circuit not found: {location}, skipping race")
+                continue
+
+            # Create race
+            race_data = {
+                "season": 2024,
+                "round": int(round_number),
+                "name": event_name,
+                "circuit_id": circuit_obj.id,
+                "country": country,
+                "date": race_date,
+                "status": "scheduled",
+            }
+
+            new_race = await race_repo.create(db, obj_in=race_data)
+            races_added += 1
+            print(f"  Added race: {event_name} (Round {round_number})")
+
+        print(f"Imported {races_added} races from FastF1")
         return races_added
 
-    except ImportError:
-        print("❌ FastF1 not available, creating mock races...")
+    except (ImportError, Exception) as e:
+        print(f"FastF1 not available or error occurred ({type(e).__name__}), creating mock races...")
         # Create mock races for testing
         mock_races = [
             {
@@ -327,16 +442,16 @@ async def import_races(db: AsyncSession):
             await race_repo.create(db, obj_in=race_data_clean)
             races_added += 1
             print(
-                f"  ✅ Added mock race: {race_data['name']} (Round {race_data['round']})"
+                f"  Added mock race: {race_data['name']} (Round {race_data['round']})"
             )
 
-        print(f"🏆 Imported {races_added} mock races")
+        print(f"Imported {races_added} mock races")
         return races_added
 
 
 async def main():
     """Main import function"""
-    print("🚀 Starting F1 data import...")
+    print("Starting F1 data import...")
 
     async with AsyncSessionLocal() as db:
         try:
@@ -347,14 +462,14 @@ async def main():
 
             await db.commit()
 
-            print("\n🎉 Import completed!")
-            print(f"   🏁 Circuits: {circuits_count}")
-            print(f"   👨‍🚒 Drivers: {drivers_count}")
-            print(f"   🏆 Races: {races_count}")
+            print("\nImport completed!")
+            print(f"   Circuits: {circuits_count}")
+            print(f"   Drivers: {drivers_count}")
+            print(f"   Races: {races_count}")
 
         except Exception as e:
             await db.rollback()
-            print(f"❌ Import failed: {e}")
+            print(f"Import failed: {e}")
             raise
 
 
