@@ -8,8 +8,8 @@ from pathlib import Path
 # Add parent to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.services.fastf1_optimized import fastf1_service
 from app.core.database import AsyncSessionLocal
+from app.services.fastf1_optimized import fastf1_service
 
 # 2024 race schedule
 RACES_2024 = [

@@ -1,20 +1,20 @@
 """F1 service layer - cleaned and optimized"""
 
-from typing import List, Optional, Any
 from datetime import datetime
+from typing import Any, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.repositories.f1 import race, driver, lap_data, pit_stop
+from app.repositories.f1 import driver, lap_data, pit_stop, race
 from app.schemas.f1 import (
-    RaceResponse,
-    RaceList,
-    DriverResponse,
     DriverList,
-    LapDataResponse,
+    DriverResponse,
     LapDataList,
-    PitStopResponse,
+    LapDataResponse,
     PitStopList,
+    PitStopResponse,
+    RaceList,
+    RaceResponse,
 )
 
 

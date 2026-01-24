@@ -4,21 +4,22 @@ Uses TracingInsights-Archive GitHub repos for comprehensive telemetry data
 """
 
 import asyncio
-import httpx
 import json
-from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from typing import Any, Dict, List, Optional
 
-from app.models.f1 import Race, Driver, Circuit, LapData, PitStop, RaceDriver
+import httpx
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.f1 import Circuit, Driver, LapData, PitStop, Race, RaceDriver
 from app.schemas.f1 import (
-    RaceResponse,
-    RaceList,
-    DriverResponse,
     DriverList,
-    SeasonResponse,
+    DriverResponse,
+    RaceList,
+    RaceResponse,
     SeasonList,
+    SeasonResponse,
 )
 
 

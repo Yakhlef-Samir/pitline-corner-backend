@@ -8,21 +8,20 @@ This script will:
 """
 
 import asyncio
-import sys
 import os
+import sys
 from datetime import datetime
 
 # Add the project root to Python path
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.database import AsyncSessionLocal
 from app.models.f1 import Circuit, Driver, Race
-from app.repositories.f1 import (
-    circuit as circuit_repo,
-    driver as driver_repo,
-    race as race_repo,
-)
+from app.repositories.f1 import circuit as circuit_repo
+from app.repositories.f1 import driver as driver_repo
+from app.repositories.f1 import race as race_repo
 
 
 async def import_circuits(db: AsyncSession):

@@ -3,8 +3,9 @@ Overtake Strategy Calculator
 Analyzes best opportunities for overtaking
 """
 
-from typing import List, Dict, Any
 from dataclasses import dataclass
+from typing import Any, Dict, List
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 

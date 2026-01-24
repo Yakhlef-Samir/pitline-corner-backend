@@ -1,13 +1,13 @@
-from app.models.user import User
 from app.models.f1 import (
     Circuit,
-    Race,
     Driver,
-    RaceDriver,
     LapData,
     PitStop,
+    Race,
+    RaceDriver,
     Simulation,
 )
+from app.models.user import User
 
 __all__ = [
     "User",

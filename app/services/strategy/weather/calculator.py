@@ -3,8 +3,9 @@ Weather Adaptation Strategy Calculator
 Analyzes strategy adjustments for weather changes
 """
 
-from typing import Dict, Any
 from dataclasses import dataclass
+from typing import Any, Dict
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 

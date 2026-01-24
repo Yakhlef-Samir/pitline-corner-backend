@@ -4,9 +4,10 @@ Prototype script to test parsing TracingInsights RaceData CSV files
 This validates the data structure and mapping before full integration
 """
 
-import pandas as pd
 from datetime import datetime
 from pathlib import Path
+
+import pandas as pd
 
 
 def parse_races_csv(csv_path: str):

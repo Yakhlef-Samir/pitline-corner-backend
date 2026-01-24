@@ -1,21 +1,21 @@
 """Optimized Fast-F1 service with caching and async support"""
 
-import fastf1
 import asyncio
-import pickle
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta
-from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-
-from app.models.f1 import Race, Driver, LapData, PitStop
-import pandas as pd
-
-from app.core.config import settings
 
 # Enable Fast-F1 cache
 import os
+import pickle
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import fastf1
+import pandas as pd
+from redis.asyncio import Redis
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.models.f1 import Driver, LapData, PitStop, Race
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "cache", "fastf1")
 os.makedirs(CACHE_DIR, exist_ok=True)

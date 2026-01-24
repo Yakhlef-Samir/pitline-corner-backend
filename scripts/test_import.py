@@ -7,8 +7,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.services.fastf1_optimized import fastf1_service
 from app.core.database import AsyncSessionLocal
+from app.services.fastf1_optimized import fastf1_service
 
 
 async def test():

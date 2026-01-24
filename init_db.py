@@ -4,22 +4,22 @@ Script to initialize database tables
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Add the project root to Python path
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from app.core.database import engine, Base
+from app.core.database import Base, engine
 from app.models import (
-    User,
     Circuit,
-    Race,
     Driver,
-    RaceDriver,
     LapData,
     PitStop,
+    Race,
+    RaceDriver,
     Simulation,
+    User,
 )
 
 

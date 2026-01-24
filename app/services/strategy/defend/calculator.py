@@ -3,8 +3,9 @@ Defend Position Strategy Calculator
 Analyzes defensive strategies to maintain position
 """
 
-from typing import Dict, Any
 from dataclasses import dataclass
+from typing import Any, Dict
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 

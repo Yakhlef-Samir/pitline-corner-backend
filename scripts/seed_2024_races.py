@@ -3,15 +3,16 @@
 
 import asyncio
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Add parent to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.core.database import AsyncSessionLocal
-from app.models.f1 import Race, Circuit
-from app.repositories.f1 import race as race_repo, circuit as circuit_repo
+from app.models.f1 import Circuit, Race
+from app.repositories.f1 import circuit as circuit_repo
+from app.repositories.f1 import race as race_repo
 
 RACES_2024 = [
     (1, "Bahrain", 2024, 1, "Bahrain Grand Prix", "2024-03-02T15:00:00"),

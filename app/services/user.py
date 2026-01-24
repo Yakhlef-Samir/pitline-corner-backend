@@ -1,9 +1,10 @@
 # Business logic services
 from typing import Optional
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.repositories.user import user
 from app.schemas.user import UserCreate
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class UserService:

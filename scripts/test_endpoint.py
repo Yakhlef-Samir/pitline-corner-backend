@@ -2,6 +2,7 @@
 """Test lap data endpoint"""
 
 import asyncio
+
 import httpx
 
 

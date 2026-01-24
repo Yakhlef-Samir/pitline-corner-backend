@@ -2,32 +2,32 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.database import get_db_session
 from app.schemas.common import ApiResponse
 from app.schemas.f1 import (
-    RaceResponse,
-    RaceList,
-    DriverResponse,
     DriverList,
-    LapDataResponse,
+    DriverResponse,
     LapDataList,
-    PitStopResponse,
+    LapDataResponse,
     PitStopList,
+    PitStopResponse,
+    RaceList,
+    RaceResponse,
 )
 from app.services.f1 import (
-    race_service,
     driver_service,
     lap_data_service,
     pit_stop_service,
+    race_service,
 )
 from app.services.fastf1_optimized import fastf1_service
 from app.services.strategy import (
-    pit_stop_calculator,
-    overtake_calculator,
     defense_calculator,
+    overtake_calculator,
+    pit_stop_calculator,
     weather_calculator,
 )
 

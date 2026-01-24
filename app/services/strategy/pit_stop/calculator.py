@@ -3,8 +3,9 @@ Pit Stop Strategy Calculator
 Calculates how position changes with different pit stop lap numbers
 """
 
-from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.f1 import LapData, PitStop
