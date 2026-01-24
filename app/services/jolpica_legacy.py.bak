@@ -1,0 +1,432 @@
+"""
+Service layer for Jolpica-F1 API integration with Fast-F1 for recent data
+"""
+import asyncio
+from typing import List, Optional, Dict, Any
+from datetime import datetime
+import httpx
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+
+# Optional pandas import
+try:
+    import pandas as pd
+    HAS_PANDAS = True
+except ImportError:
+    HAS_PANDAS = False
+    pd = None
+
+# Fast-F1 import for recent data
+try:
+    import fastf1
+    HAS_FASTF1 = True
+except ImportError:
+    HAS_FASTF1 = False
+    fastf1 = None
+
+from app.schemas.f1 import (
+    RaceResponse, RaceList,
+    DriverResponse, DriverList,
+    SeasonResponse, SeasonList
+)
+
+
+class JolpicaF1Service:
+    """Service layer for F1 data - Jolpica for historical, Fast-F1 for recent"""
+    
+    BASE_URL = "https://api.jolpi.ca/ergast/f1"
+    
+    def __init__(self):
+        self.cache = {}
+        self.cache_ttl = 300  # 5 minutes cache
+    
+    async def get_seasons(self) -> SeasonList:
+        """Get all F1 seasons - combines historical and recent data"""
+        try:
+            seasons = []
+            
+            # Get historical seasons from Jolpica (1950-1979)
+            jolpica_seasons = await self._get_jolpica_seasons()
+            seasons.extend(jolpica_seasons)
+            
+            # Add recent seasons using Fast-F1 (2020-2024)
+            recent_seasons = await self._get_fastf1_seasons()
+            seasons.extend(recent_seasons)
+            
+            # Sort by year
+            seasons.sort(key=lambda x: x.year)
+            
+            return SeasonList(seasons=seasons)
+            
+        except Exception as e:
+            raise ValueError(f"Failed to fetch seasons: {str(e)}")
+    
+    async def _get_jolpica_seasons(self) -> List[SeasonResponse]:
+        """Get historical seasons from Jolpica API (1950-1979)"""
+        try:
+            data = await self._make_request("/seasons.json")
+            
+            seasons = []
+            season_data_list = data.get("MRData", {}).get("SeasonTable", {}).get("Seasons", [])
+            
+            for season_data in season_data_list:
+                season = SeasonResponse(
+                    id=int(season_data["season"]),
+                    year=int(season_data["season"]),
+                    total_races=0,  # Would need additional API call
+                    completed_races=0,
+                    created_at=datetime.now(),
+                    updated_at=None
+                )
+                seasons.append(season)
+            
+            return seasons
+        except Exception as e:
+            print(f"Jolpica seasons failed: {e}")
+            return []
+    
+    async def _get_fastf1_seasons(self) -> List[SeasonResponse]:
+        """Get recent seasons from Fast-F1 (2020-2024)"""
+        seasons = []
+        
+        if not HAS_FASTF1:
+            print("Fast-F1 not available, using mock data")
+            return self._get_mock_recent_seasons()
+        
+        try:
+            # Recent seasons with actual data
+            recent_years = [2020, 2021, 2022, 2023, 2024]
+            
+            for year in recent_years:
+                try:
+                    # Get race schedule for the year
+                    schedule = fastf1.get_event_schedule(year)
+                    # Count valid races (with round numbers)
+                    valid_races = schedule[schedule['RoundNumber'].notna()]
+                    total_races = len(valid_races)
+                    
+                    season = SeasonResponse(
+                        id=year,
+                        year=year,
+                        total_races=total_races,
+                        completed_races=total_races if year < datetime.now().year else 0,
+                        created_at=datetime.now(),
+                        updated_at=None
+                    )
+                    seasons.append(season)
+                    print(f"Added season {year} with {total_races} races")
+                    
+                except Exception as e:
+                    print(f"Fast-F1 season {year} failed: {e}")
+                    # Use fallback for this specific year
+                    fallback_season = self._get_fallback_season(year)
+                    if fallback_season:
+                        seasons.append(fallback_season)
+                    continue
+            
+            return seasons
+        except Exception as e:
+            print(f"Fast-F1 completely failed: {e}")
+            return self._get_mock_recent_seasons()
+    
+    def _get_fallback_season(self, year: int) -> Optional[SeasonResponse]:
+        """Get fallback data for a specific season"""
+        season_data = {
+            2020: {"races": 17, "completed": 17},
+            2021: {"races": 22, "completed": 22},
+            2022: {"races": 22, "completed": 22},
+            2023: {"races": 22, "completed": 22},
+            2024: {"races": 24, "completed": 22}
+        }
+        
+        if year in season_data:
+            data = season_data[year]
+            return SeasonResponse(
+                id=year,
+                year=year,
+                total_races=data["races"],
+                completed_races=data["completed"],
+                created_at=datetime.now(),
+                updated_at=None
+            )
+        return None
+    
+    def _get_mock_recent_seasons(self) -> List[SeasonResponse]:
+        """Fallback mock data for recent seasons"""
+        return [
+            SeasonResponse(id=2020, year=2020, total_races=17, completed_races=17, created_at=datetime.now(), updated_at=None),
+            SeasonResponse(id=2021, year=2021, total_races=22, completed_races=22, created_at=datetime.now(), updated_at=None),
+            SeasonResponse(id=2022, year=2022, total_races=22, completed_races=22, created_at=datetime.now(), updated_at=None),
+            SeasonResponse(id=2023, year=2023, total_races=22, completed_races=22, created_at=datetime.now(), updated_at=None),
+            SeasonResponse(id=2024, year=2024, total_races=24, completed_races=22, created_at=datetime.now(), updated_at=None)
+        ]
+    
+    async def _make_request(self, endpoint: str, use_cache: bool = True) -> Dict[str, Any]:
+        """Make request to Jolpica-F1 API with caching"""
+        cache_key = f"{endpoint}_{datetime.now().timestamp() // self.cache_ttl}"
+        
+        if use_cache and cache_key in self.cache:
+            return self.cache[cache_key]
+        
+        try:
+            async with httpx.AsyncClient(follow_redirects=True) as client:
+                response = await client.get(f"{self.BASE_URL}{endpoint}", timeout=10.0)
+                response.raise_for_status()
+                data = response.json()
+                
+                if use_cache:
+                    self.cache[cache_key] = data
+                
+                return data
+        except Exception as e:
+            # Fallback to mock data if API is not available
+            print(f"Jolpica API not available, using fallback: {e}")
+            return self._get_fallback_data(endpoint)
+    
+    def _get_fallback_data(self, endpoint: str) -> Dict[str, Any]:
+        """Provide fallback data when Jolpica API is not available"""
+        if "/seasons" in endpoint:
+            return {
+                "seasons": [
+                    {"season": "2024", "rounds": "24"},
+                    {"season": "2023", "rounds": "22"},
+                    {"season": "2022", "rounds": "22"},
+                    {"season": "2021", "rounds": "22"},
+                    {"season": "2020", "rounds": "17"}
+                ]
+            }
+        elif "/2024/seasons" in endpoint:
+            return {
+                "seasons": [
+                    {"season": "2024", "rounds": "24"}
+                ]
+            }
+        elif "/2024/races" in endpoint:
+            return {
+                "races": [
+                    {
+                        "season": "2024",
+                        "round": "1",
+                        "raceName": "Bahrain Grand Prix",
+                        "date": "2024-03-02T15:00:00Z",
+                        "Circuit": {
+                            "Location": {"country": "Bahrain"}
+                        }
+                    },
+                    {
+                        "season": "2024",
+                        "round": "2",
+                        "raceName": "Saudi Arabian Grand Prix",
+                        "date": "2024-03-09T15:00:00Z",
+                        "Circuit": {
+                            "Location": {"country": "Saudi Arabia"}
+                        }
+                    },
+                    {
+                        "season": "2024",
+                        "round": "3",
+                        "raceName": "Australian Grand Prix",
+                        "date": "2024-03-24T06:00:00Z",
+                        "Circuit": {
+                            "Location": {"country": "Australia"}
+                        }
+                    }
+                ]
+            }
+        elif "/drivers" in endpoint:
+            return {
+                "drivers": [
+                    {
+                        "driverId": "driver_verstappen",
+                        "permanentNumber": "1",
+                        "code": "VER",
+                        "givenName": "Max",
+                        "familyName": "Verstappen",
+                        "nationality": "Dutch"
+                    },
+                    {
+                        "driverId": "driver_leclerc",
+                        "permanentNumber": "16",
+                        "code": "LEC",
+                        "givenName": "Charles",
+                        "familyName": "Leclerc",
+                        "nationality": "Monegasque"
+                    },
+                    {
+                        "driverId": "driver_sainz",
+                        "permanentNumber": "55",
+                        "code": "SAI",
+                        "givenName": "Carlos",
+                        "familyName": "Sainz",
+                        "nationality": "Spanish"
+                    }
+                ]
+            }
+        else:
+            return {"seasons": [], "races": [], "drivers": []}
+    
+    async def get_seasons(self) -> SeasonList:
+        """Get all F1 seasons"""
+        try:
+            data = await self._make_request("/seasons.json")
+            
+            seasons = []
+            # Jolpica API structure: MRData.SeasonTable.Seasons
+            season_data_list = data.get("MRData", {}).get("SeasonTable", {}).get("Seasons", [])
+            
+            for season_data in season_data_list:
+                season = SeasonResponse(
+                    id=int(season_data["season"]),
+                    year=int(season_data["season"]),
+                    total_races=0,  # Would need additional API call
+                    completed_races=0,
+                    created_at=datetime.now(),
+                    updated_at=None
+                )
+                seasons.append(season)
+            
+            return SeasonList(seasons=seasons)
+            
+        except Exception as e:
+            raise ValueError(f"Failed to fetch seasons: {str(e)}")
+    
+    async def get_season_by_year(self, year: int) -> Optional[SeasonResponse]:
+        """Get a specific season by year"""
+        try:
+            data = await self._make_request(f"/{year}/seasons")
+            
+            if not data.get("seasons"):
+                return None
+            
+            season_data = data["seasons"][0]
+            return SeasonResponse(
+                id=int(season_data["season"]),
+                year=int(season_data["season"]),
+                total_races=int(season_data.get("rounds", 0)),
+                completed_races=0,
+                created_at=datetime.now(),
+                updated_at=None
+            )
+            
+        except Exception as e:
+            raise ValueError(f"Failed to fetch season {year}: {str(e)}")
+    
+    async def get_races(self, season: Optional[int] = None) -> RaceList:
+        """Get races, optionally filtered by season"""
+        try:
+            endpoint = "/races"
+            if season:
+                endpoint = f"/{season}/races"
+            
+            data = await self._make_request(endpoint)
+            
+            races = []
+            for race_data in data.get("races", []):
+                race = RaceResponse(
+                    id=int(f"{race_data['season']}_{race_data['round']}"),
+                    season=int(race_data["season"]),
+                    round=int(race_data["round"]),
+                    name=race_data["raceName"],
+                    circuit_id=0,  # Would need to map circuit
+                    country=race_data.get("Circuit", {}).get("Location", {}).get("country", ""),
+                    date=datetime.fromisoformat(race_data["date"].replace("Z", "+00:00")),
+                    status="completed" if race_data.get("results") else "scheduled",
+                    data_imported=True,
+                    imported_at=datetime.now(),
+                    created_at=datetime.now(),
+                    updated_at=None,
+                    circuit=None
+                )
+                races.append(race)
+            
+            return RaceList(races=races)
+            
+        except Exception as e:
+            raise ValueError(f"Failed to fetch races: {str(e)}")
+    
+    async def get_drivers(self, season: Optional[int] = None) -> DriverList:
+        """Get drivers, optionally filtered by season"""
+        try:
+            endpoint = "/drivers"
+            if season:
+                endpoint = f"/{season}/drivers"
+            
+            data = await self._make_request(endpoint)
+            
+            drivers = []
+            for driver_data in data.get("drivers", []):
+                try:
+                    # Extract numeric ID or use hash
+                    driver_id_str = driver_data.get("driverId", "")
+                    if "driver_" in driver_id_str:
+                        driver_id = hash(driver_id_str) % 1000000  # Create positive ID
+                    else:
+                        driver_id = int(driver_id_str.split("_")[1]) if "_" in driver_id_str else hash(driver_id_str) % 1000000
+                    
+                    driver = DriverResponse(
+                        id=driver_id,
+                        driver_number=int(driver_data.get("permanentNumber", 0)),
+                        code=driver_data.get("code", ""),
+                        first_name=driver_data.get("givenName", ""),
+                        last_name=driver_data.get("familyName", ""),
+                        team="",  # Would need additional API call
+                        country=driver_data.get("nationality", ""),
+                        created_at=datetime.now(),
+                        updated_at=None
+                    )
+                    drivers.append(driver)
+                except Exception as e:
+                    # Skip problematic driver entries
+                    continue
+            
+            return DriverList(drivers=drivers)
+            
+        except Exception as e:
+            raise ValueError(f"Failed to fetch drivers: {str(e)}")
+    
+    async def import_season_data(self, db: AsyncSession, season: int) -> List[RaceResponse]:
+        """Import season data from Jolpica-F1"""
+        try:
+            # Get races for the season
+            races = await self.get_races(season)
+            
+            # Store in database
+            imported_races = []
+            for race in races.races:
+                # Check if race already exists
+                existing = await db.execute(
+                    text("SELECT id FROM races WHERE season = :season AND round = :round"),
+                    {"season": race.season, "round": race.round}
+                )
+                if not existing.fetchone():
+                    # Insert race
+                    await db.execute(
+                        text("""
+                            INSERT INTO races (season, round, name, circuit_id, country, date, status, data_imported, imported_at, created_at)
+                            VALUES (:season, :round, :name, :circuit_id, :country, :date, :status, :data_imported, :imported_at, :created_at)
+                        """),
+                        {
+                            "season": race.season,
+                            "round": race.round,
+                            "name": race.name,
+                            "circuit_id": race.circuit_id,
+                            "country": race.country,
+                            "date": race.date,
+                            "status": race.status,
+                            "data_imported": race.data_imported,
+                            "imported_at": race.imported_at,
+                            "created_at": race.created_at
+                        }
+                    )
+                    imported_races.append(race)
+            
+            await db.commit()
+            return imported_races
+            
+        except Exception as e:
+            await db.rollback()
+            raise ValueError(f"Failed to import season {season}: {str(e)}")
+
+
+# Create service instance
+jolpica_service = JolpicaF1Service()

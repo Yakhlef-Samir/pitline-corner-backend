@@ -41,7 +41,9 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "pitline_corner"
     POSTGRES_PORT: str = "5432"
-    DATABASE_URL: Optional[PostgresDsn] = None
+    DATABASE_URL: Optional[str] = (
+        "sqlite+aiosqlite:///./f1_data.db"  # SQLite for development
+    )
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
@@ -51,10 +53,10 @@ class Settings(BaseSettings):
         values = info.data if hasattr(info, "data") else {}
         return PostgresDsn.build(
             scheme="postgresql+asyncpg",
-            user=values.get("POSTGRES_USER", "postgres"),
+            username=values.get("POSTGRES_USER", "postgres"),
             password=values.get("POSTGRES_PASSWORD", "postgres"),
             host=values.get("POSTGRES_SERVER", "localhost"),
-            port=values.get("POSTGRES_PORT", "5432"),
+            port=int(values.get("POSTGRES_PORT", "5432")),
             path=f"/{values.get('POSTGRES_DB', 'pitline_corner') or ''}",
         )
 
