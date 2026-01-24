@@ -178,3 +178,7 @@ nul
 # Documentation and markdown files
 *.md
 !README.md
+
+# FastF1 cache - can be regenerated
+cache/
+*.ff1pkl
