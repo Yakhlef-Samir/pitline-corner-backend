@@ -2,6 +2,7 @@
 Overtake Strategy Calculator
 Analyzes best opportunities for overtaking
 """
+
 from typing import List, Dict, Any
 from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 @dataclass
 class OvertakeOpportunity:
     """Analysis of an overtake opportunity"""
+
     corner_number: int
     corner_name: str
     drs_eligible: bool
@@ -20,6 +22,7 @@ class OvertakeOpportunity:
 @dataclass
 class OvertakeSimulation:
     """Result of overtake strategy simulation"""
+
     driver_id: int
     race_id: int
     scenario_name: str
@@ -36,11 +39,7 @@ class OvertakeStrategyCalculator:
     """
 
     async def analyze_overtake_opportunities(
-        self,
-        db: AsyncSession,
-        race_id: int,
-        driver_id: int,
-        target_driver_id: int
+        self, db: AsyncSession, race_id: int, driver_id: int, target_driver_id: int
     ) -> OvertakeSimulation:
         """
         Analyze opportunities to overtake target driver.
@@ -67,7 +66,7 @@ class OvertakeStrategyCalculator:
             position_gain=1,
             confidence_score=75.0,
             recommendation="Optimal overtake opportunity at corner 1 with DRS",
-            opportunities=[]
+            opportunities=[],
         )
 
 

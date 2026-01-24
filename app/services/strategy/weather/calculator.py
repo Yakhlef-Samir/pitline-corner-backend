@@ -2,6 +2,7 @@
 Weather Adaptation Strategy Calculator
 Analyzes strategy adjustments for weather changes
 """
+
 from typing import Dict, Any
 from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 @dataclass
 class WeatherSimulation:
     """Result of weather strategy simulation"""
+
     driver_id: int
     race_id: int
     scenario_name: str
@@ -32,7 +34,7 @@ class WeatherStrategyCalculator:
         race_id: int,
         driver_id: int,
         current_weather: str,
-        expected_weather: str
+        expected_weather: str,
     ) -> WeatherSimulation:
         """
         Calculate strategy adjustment for weather change.
@@ -61,7 +63,7 @@ class WeatherStrategyCalculator:
             position_impact=0,
             recommended_adjustment="Monitor conditions and prepare pit stop strategy",
             confidence_score=70.0,
-            recommendation="Be prepared for tire change when weather transitions"
+            recommendation="Be prepared for tire change when weather transitions",
         )
 
 

@@ -2,6 +2,7 @@
 Pit Stop Strategy Calculator
 Calculates how position changes with different pit stop lap numbers
 """
+
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +14,7 @@ from app.repositories.f1 import lap_data, pit_stop
 @dataclass
 class LapMetrics:
     """Metrics for a single lap"""
+
     lap_number: int
     lap_time: float
     position: int
@@ -24,6 +26,7 @@ class LapMetrics:
 @dataclass
 class PitStopSimulation:
     """Result of a pit stop simulation"""
+
     driver_id: int
     race_id: int
     scenario_name: str
@@ -53,11 +56,7 @@ class PitStopStrategyCalculator:
     """
 
     async def calculate_alternative_strategy(
-        self,
-        db: AsyncSession,
-        race_id: int,
-        driver_id: int,
-        alternative_stop_lap: int
+        self, db: AsyncSession, race_id: int, driver_id: int, alternative_stop_lap: int
     ) -> PitStopSimulation:
         """
         Calculate how position changes with different pit stop lap.
@@ -73,45 +72,44 @@ class PitStopStrategyCalculator:
         # Get all lap data for this driver
         driver_laps = await lap_data.get_driver_laps(db, race_id, driver_id)
         if not driver_laps:
-            raise ValueError(f"No lap data found for driver {driver_id} in race {race_id}")
+            raise ValueError(
+                f"No lap data found for driver {driver_id} in race {race_id}"
+            )
 
         # Get actual pit stops
         actual_pit_stops = await pit_stop.get_driver_pit_stops(db, race_id, driver_id)
 
         # Find original pit stop lap
-        original_stop_lap = (
-            actual_pit_stops[0].lap if actual_pit_stops else None
-        )
+        original_stop_lap = actual_pit_stops[0].lap if actual_pit_stops else None
 
         # Calculate metrics at different points
-        original_final_position = self._get_position_at_lap(driver_laps, len(driver_laps))
+        original_final_position = self._get_position_at_lap(
+            driver_laps, len(driver_laps)
+        )
 
         # Simulate alternative strategy
         alternative_final_position = await self._simulate_position_after_stop(
-            driver_laps,
-            alternative_stop_lap,
-            len(driver_laps)
+            driver_laps, alternative_stop_lap, len(driver_laps)
         )
 
         position_gain = original_final_position - alternative_final_position
 
         # Estimate time metrics
-        time_loss_at_stop = self._estimate_pit_stop_loss(driver_laps, alternative_stop_lap)
-        time_gain_after_stop = self._estimate_fresh_tire_gain(driver_laps, alternative_stop_lap)
+        time_loss_at_stop = self._estimate_pit_stop_loss(
+            driver_laps, alternative_stop_lap
+        )
+        time_gain_after_stop = self._estimate_fresh_tire_gain(
+            driver_laps, alternative_stop_lap
+        )
 
         # Calculate confidence (0-100)
         confidence_score = self._calculate_confidence(
-            position_gain,
-            time_loss_at_stop,
-            time_gain_after_stop
+            position_gain, time_loss_at_stop, time_gain_after_stop
         )
 
         # Generate recommendation
         recommendation = self._generate_recommendation(
-            position_gain,
-            original_stop_lap,
-            alternative_stop_lap,
-            confidence_score
+            position_gain, original_stop_lap, alternative_stop_lap, confidence_score
         )
 
         return PitStopSimulation(
@@ -129,15 +127,17 @@ class PitStopStrategyCalculator:
             recommendation=recommendation,
             detailed_analysis={
                 "total_laps": len(driver_laps),
-                "original_tire_strategy": self._analyze_tire_strategy(
-                    driver_laps, original_stop_lap
-                ) if original_stop_lap else "Unknown",
+                "original_tire_strategy": (
+                    self._analyze_tire_strategy(driver_laps, original_stop_lap)
+                    if original_stop_lap
+                    else "Unknown"
+                ),
                 "alternative_tire_strategy": self._analyze_tire_strategy(
                     driver_laps, alternative_stop_lap
                 ),
                 "tire_degradation": self._analyze_tire_degradation(driver_laps),
-                "competitive_context": "Lahir simulation vs 1 pit stop leader"
-            }
+                "competitive_context": "Lahir simulation vs 1 pit stop leader",
+            },
         )
 
     def _get_position_at_lap(self, lap_data: List[Any], target_lap: int) -> int:
@@ -148,10 +148,7 @@ class PitStopStrategyCalculator:
         return lap_data[0].position if lap_data else 20
 
     async def _simulate_position_after_stop(
-        self,
-        lap_data: List[Any],
-        stop_lap: int,
-        total_laps: int
+        self, lap_data: List[Any], stop_lap: int, total_laps: int
     ) -> int:
         """
         Simulate position after pit stop.
@@ -190,10 +187,7 @@ class PitStopStrategyCalculator:
         return fresh_tire_gain * laps_with_gain
 
     def _calculate_confidence(
-        self,
-        position_gain: int,
-        time_loss: float,
-        time_gain: float
+        self, position_gain: int, time_loss: float, time_gain: float
     ) -> float:
         """Calculate confidence score (0-100)"""
         # More position gain = higher confidence
@@ -211,7 +205,7 @@ class PitStopStrategyCalculator:
         position_gain: int,
         original_stop_lap: int,
         alternative_stop_lap: int,
-        confidence_score: float
+        confidence_score: float,
     ) -> str:
         """Generate text recommendation"""
         if position_gain > 0:
@@ -254,7 +248,7 @@ class PitStopStrategyCalculator:
             "first_lap_time": first_lap_time,
             "last_lap_time": last_lap_time,
             "degradation_seconds": degradation,
-            "degradation_percentage": degradation_percentage
+            "degradation_percentage": degradation_percentage,
         }
 
 

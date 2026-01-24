@@ -2,6 +2,7 @@
 Defend Position Strategy Calculator
 Analyzes defensive strategies to maintain position
 """
+
 from typing import Dict, Any
 from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 @dataclass
 class DefenseSimulation:
     """Result of defense strategy simulation"""
+
     driver_id: int
     race_id: int
     scenario_name: str
@@ -26,11 +28,7 @@ class DefenseStrategyCalculator:
     """
 
     async def calculate_defense_strategy(
-        self,
-        db: AsyncSession,
-        race_id: int,
-        driver_id: int,
-        attacking_driver_id: int
+        self, db: AsyncSession, race_id: int, driver_id: int, attacking_driver_id: int
     ) -> DefenseSimulation:
         """
         Calculate defense strategy against attacking driver.
@@ -57,7 +55,7 @@ class DefenseStrategyCalculator:
             position_hold_probability=85.0,
             recommended_tactic="Conservative tire management and line defense",
             confidence_score=80.0,
-            recommendation="Focus on tire preservation and defensive positioning"
+            recommendation="Focus on tire preservation and defensive positioning",
         )
 
 

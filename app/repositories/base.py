@@ -22,9 +22,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
         self.model = model
 
-    async def get(
-        self, db: AsyncSession, id: Any
-    ) -> Optional[ModelType]:
+    async def get(self, db: AsyncSession, id: Any) -> Optional[ModelType]:
         """Get a single record by ID"""
         result = await db.execute(select(self.model).where(self.model.id == id))
         return result.scalar_one_or_none()
@@ -33,14 +31,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100
     ) -> List[ModelType]:
         """Get multiple records with pagination"""
-        result = await db.execute(
-            select(self.model).offset(skip).limit(limit)
-        )
+        result = await db.execute(select(self.model).offset(skip).limit(limit))
         return result.scalars().all()
 
-    async def create(
-        self, db: AsyncSession, *, obj_in: dict | BaseModel
-    ) -> ModelType:
+    async def create(self, db: AsyncSession, *, obj_in: dict | BaseModel) -> ModelType:
         """Create a new record"""
         if isinstance(obj_in, BaseModel):
             obj_data = obj_in.model_dump()
@@ -57,24 +51,22 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db: AsyncSession,
         *,
         db_obj: ModelType,
-        obj_in: Union[UpdateSchemaType, Dict[str, Any]]
+        obj_in: Union[UpdateSchemaType, Dict[str, Any]],
     ) -> ModelType:
         """Update an existing record"""
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
             update_data = obj_in.model_dump(exclude_unset=True)
-        
+
         for field, value in update_data.items():
             setattr(db_obj, field, value)
-        
+
         await db.commit()
         await db.refresh(db_obj)
         return db_obj
 
-    async def remove(
-        self, db: AsyncSession, *, id: int
-    ) -> ModelType:
+    async def remove(self, db: AsyncSession, *, id: int) -> ModelType:
         """Delete a record by ID"""
         obj = await self.get(db, id=id)
         await db.delete(obj)

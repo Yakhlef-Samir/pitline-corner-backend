@@ -22,7 +22,7 @@ def parse_races_csv(csv_path: str):
     print(f"Total races: {len(df)}")
 
     # Filter 2024 races
-    df_2024 = df[df['year'] == 2024]
+    df_2024 = df[df["year"] == 2024]
     print(f"\n2024 Races: {len(df_2024)}")
 
     # Show sample race
@@ -53,7 +53,9 @@ def parse_drivers_csv(csv_path: str):
     # Show sample drivers
     print("\nSample drivers:")
     for idx, row in df.head(5).iterrows():
-        print(f"  {row['code']}: {row['forename']} {row['surname']} (#{row['number'] if pd.notna(row['number']) else 'N/A'})")
+        print(
+            f"  {row['code']}: {row['forename']} {row['surname']} (#{row['number'] if pd.notna(row['number']) else 'N/A'})"
+        )
 
     return df
 
@@ -71,13 +73,15 @@ def parse_lap_times_csv(csv_path: str):
     print(f"Total lap records: {len(df)}")
 
     # Get sample race (first raceId)
-    sample_race_id = df['raceId'].iloc[0]
-    df_sample = df[df['raceId'] == sample_race_id].head(10)
+    sample_race_id = df["raceId"].iloc[0]
+    df_sample = df[df["raceId"] == sample_race_id].head(10)
 
     print(f"\nSample laps (raceId={sample_race_id}):")
     for idx, row in df_sample.iterrows():
-        print(f"  Lap {row['lap']}: Driver {row['driverId']}, Position {row['position']}, "
-              f"Time: {row['time']} ({row['milliseconds']}ms)")
+        print(
+            f"  Lap {row['lap']}: Driver {row['driverId']}, Position {row['position']}, "
+            f"Time: {row['time']} ({row['milliseconds']}ms)"
+        )
 
     return df
 
@@ -95,13 +99,15 @@ def parse_pit_stops_csv(csv_path: str):
     print(f"Total pit stops: {len(df)}")
 
     # Get sample race (first raceId)
-    sample_race_id = df['raceId'].iloc[0]
-    df_sample = df[df['raceId'] == sample_race_id].head(10)
+    sample_race_id = df["raceId"].iloc[0]
+    df_sample = df[df["raceId"] == sample_race_id].head(10)
 
     print(f"\nSample pit stops (raceId={sample_race_id}):")
     for idx, row in df_sample.iterrows():
-        print(f"  Stop {row['stop']}: Driver {row['driverId']}, Lap {row['lap']}, "
-              f"Duration: {row['duration']}s ({row['milliseconds']}ms)")
+        print(
+            f"  Stop {row['stop']}: Driver {row['driverId']}, Lap {row['lap']}, "
+            f"Duration: {row['duration']}s ({row['milliseconds']}ms)"
+        )
 
     return df
 
@@ -143,7 +149,7 @@ def analyze_data_mapping():
             "stop": "PitStop.stop_number",
             "lap": "PitStop.lap",
             "milliseconds": "PitStop.duration_seconds (convert ms->seconds)",
-        }
+        },
     }
 
     print("\nMapping RaceData CSV -> Database Schema:\n")
@@ -181,7 +187,7 @@ def identify_missing_data():
         ],
         "Driver": [
             "team (need to get from constructors/results)",
-        ]
+        ],
     }
 
     print("\nData fields MISSING in RaceData (needed for full MVP):\n")
@@ -193,7 +199,9 @@ def identify_missing_data():
 
     print("\nRECOMMENDATION:")
     print("  RaceData provides BASIC race data (races, drivers, lap times, pit stops)")
-    print("  For TELEMETRY (sector times, tire data), we need TracingInsights-Archive/*")
+    print(
+        "  For TELEMETRY (sector times, tire data), we need TracingInsights-Archive/*"
+    )
     print("  -> Use HYBRID approach:")
     print("     - RaceData for races/drivers/basic lap times")
     print("     - TracingInsights-Archive JSON for telemetry/tire/sector data")

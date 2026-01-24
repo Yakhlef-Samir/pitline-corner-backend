@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Seed 2024 F1 races into database"""
+
 import asyncio
 import sys
 from pathlib import Path
@@ -11,7 +12,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.core.database import AsyncSessionLocal
 from app.models.f1 import Race, Circuit
 from app.repositories.f1 import race as race_repo, circuit as circuit_repo
-
 
 RACES_2024 = [
     (1, "Bahrain", 2024, 1, "Bahrain Grand Prix", "2024-03-02T15:00:00"),
@@ -52,7 +52,14 @@ async def seed_races():
 
         # Add missing races
         count = 0
-        for circuit_id, circuit_name, season, round_num, race_name, race_date in RACES_2024:
+        for (
+            circuit_id,
+            circuit_name,
+            season,
+            round_num,
+            race_name,
+            race_date,
+        ) in RACES_2024:
             if round_num in existing_rounds:
                 print(f"[SKIP] Round {round_num}: {race_name} (already exists)")
                 continue
@@ -70,7 +77,7 @@ async def seed_races():
                     country=circuit_name,
                     date=date_obj,
                     status="completed" if round_num <= 3 else "scheduled",
-                    data_imported=False
+                    data_imported=False,
                 )
 
                 db.add(new_race)

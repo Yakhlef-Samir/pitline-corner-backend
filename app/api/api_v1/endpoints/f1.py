@@ -1,8 +1,5 @@
-
-
-
-
 """F1 API endpoints - cleaned minimal version"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -11,21 +8,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies.database import get_db_session
 from app.schemas.common import ApiResponse
 from app.schemas.f1 import (
-    RaceResponse, RaceList,
-    DriverResponse, DriverList,
-    LapDataResponse, LapDataList,
-    PitStopResponse, PitStopList
+    RaceResponse,
+    RaceList,
+    DriverResponse,
+    DriverList,
+    LapDataResponse,
+    LapDataList,
+    PitStopResponse,
+    PitStopList,
 )
 from app.services.f1 import (
-    race_service, driver_service, lap_data_service,
-    pit_stop_service
+    race_service,
+    driver_service,
+    lap_data_service,
+    pit_stop_service,
 )
 from app.services.fastf1_optimized import fastf1_service
 from app.services.strategy import (
     pit_stop_calculator,
     overtake_calculator,
     defense_calculator,
-    weather_calculator
+    weather_calculator,
 )
 
 router = APIRouter()
@@ -35,7 +38,7 @@ router = APIRouter()
 @router.get("/races", response_model=ApiResponse[RaceList])
 async def get_races(
     season: Optional[int] = Query(None, description="Filter by season year"),
-    db: AsyncSession = Depends(get_db_session)
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Get all F1 races"""
     try:
@@ -44,22 +47,21 @@ async def get_races(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": {"code": "RACE_FETCH_ERROR", "message": str(e)}}
+            detail={"error": {"code": "RACE_FETCH_ERROR", "message": str(e)}},
         )
 
 
 @router.get("/races/{race_id}", response_model=ApiResponse[RaceResponse])
-async def get_race(
-    race_id: int,
-    db: AsyncSession = Depends(get_db_session)
-):
+async def get_race(race_id: int, db: AsyncSession = Depends(get_db_session)):
     """Get a specific race by ID"""
     try:
         race = await race_service.get_race_by_id(db, race_id)
         if not race:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail={"error": {"code": "RACE_NOT_FOUND", "message": "Race not found"}}
+                detail={
+                    "error": {"code": "RACE_NOT_FOUND", "message": "Race not found"}
+                },
             )
         return ApiResponse(data=race)
     except HTTPException:
@@ -67,7 +69,7 @@ async def get_race(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": {"code": "RACE_FETCH_ERROR", "message": str(e)}}
+            detail={"error": {"code": "RACE_FETCH_ERROR", "message": str(e)}},
         )
 
 
@@ -75,7 +77,7 @@ async def get_race(
 async def get_race_laps(
     race_id: int,
     driver_id: Optional[int] = Query(None, description="Filter by driver ID"),
-    db: AsyncSession = Depends(get_db_session)
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Get lap data for a race"""
     try:
@@ -83,17 +85,24 @@ async def get_race_laps(
         if not race:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail={"error": {"code": "RACE_NOT_FOUND", "message": "Race not found"}}
+                detail={
+                    "error": {"code": "RACE_NOT_FOUND", "message": "Race not found"}
+                },
             )
 
-        laps = await lap_data_service.get_race_laps(db, race_id=race_id, driver_id=driver_id)
-        return {"data": laps.model_dump(), "meta": {"timestamp": "2024-01-21T20:00:00Z"}}
+        laps = await lap_data_service.get_race_laps(
+            db, race_id=race_id, driver_id=driver_id
+        )
+        return {
+            "data": laps.model_dump(),
+            "meta": {"timestamp": "2024-01-21T20:00:00Z"},
+        }
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": {"code": "LAP_DATA_ERROR", "message": str(e)}}
+            detail={"error": {"code": "LAP_DATA_ERROR", "message": str(e)}},
         )
 
 
@@ -101,7 +110,7 @@ async def get_race_laps(
 async def get_race_pit_stops(
     race_id: int,
     driver_id: Optional[int] = Query(None, description="Filter by driver ID"),
-    db: AsyncSession = Depends(get_db_session)
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Get pit stop data for a race"""
     try:
@@ -109,17 +118,21 @@ async def get_race_pit_stops(
         if not race:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail={"error": {"code": "RACE_NOT_FOUND", "message": "Race not found"}}
+                detail={
+                    "error": {"code": "RACE_NOT_FOUND", "message": "Race not found"}
+                },
             )
 
-        pit_stops = await pit_stop_service.get_race_pit_stops(db, race_id=race_id, driver_id=driver_id)
+        pit_stops = await pit_stop_service.get_race_pit_stops(
+            db, race_id=race_id, driver_id=driver_id
+        )
         return ApiResponse(data=pit_stops)
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": {"code": "PIT_STOP_ERROR", "message": str(e)}}
+            detail={"error": {"code": "PIT_STOP_ERROR", "message": str(e)}},
         )
 
 
@@ -127,7 +140,7 @@ async def get_race_pit_stops(
 @router.get("/drivers", response_model=ApiResponse[DriverList])
 async def get_drivers(
     search: Optional[str] = Query(None, description="Search drivers by name or code"),
-    db: AsyncSession = Depends(get_db_session)
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Get all F1 drivers"""
     try:
@@ -139,22 +152,21 @@ async def get_drivers(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": {"code": "DRIVER_FETCH_ERROR", "message": str(e)}}
+            detail={"error": {"code": "DRIVER_FETCH_ERROR", "message": str(e)}},
         )
 
 
 @router.get("/drivers/{driver_id}", response_model=ApiResponse[DriverResponse])
-async def get_driver(
-    driver_id: int,
-    db: AsyncSession = Depends(get_db_session)
-):
+async def get_driver(driver_id: int, db: AsyncSession = Depends(get_db_session)):
     """Get a specific driver by ID"""
     try:
         driver = await driver_service.get_driver_by_id(db, driver_id)
         if not driver:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail={"error": {"code": "DRIVER_NOT_FOUND", "message": "Driver not found"}}
+                detail={
+                    "error": {"code": "DRIVER_NOT_FOUND", "message": "Driver not found"}
+                },
             )
         return ApiResponse(data=driver)
     except HTTPException:
@@ -162,16 +174,14 @@ async def get_driver(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": {"code": "DRIVER_FETCH_ERROR", "message": str(e)}}
+            detail={"error": {"code": "DRIVER_FETCH_ERROR", "message": str(e)}},
         )
 
 
 # Data import endpoints
 @router.post("/import/race/{season}/{round}")
 async def import_race_data(
-    season: int,
-    round: int,
-    db: AsyncSession = Depends(get_db_session)
+    season: int, round: int, db: AsyncSession = Depends(get_db_session)
 ):
     """Import race data from Fast-F1"""
     try:
@@ -181,7 +191,12 @@ async def import_race_data(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"error": {"code": "IMPORT_FAILED", "message": "Failed to import race data"}}
+                detail={
+                    "error": {
+                        "code": "IMPORT_FAILED",
+                        "message": "Failed to import race data",
+                    }
+                },
             )
 
         return ApiResponse(
@@ -190,7 +205,7 @@ async def import_race_data(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": {"code": "IMPORT_ERROR", "message": str(e)}}
+            detail={"error": {"code": "IMPORT_ERROR", "message": str(e)}},
         )
 
 
@@ -200,7 +215,7 @@ async def simulate_pit_stop_strategy(
     race_id: int = Query(..., description="Race ID"),
     driver_id: int = Query(..., description="Driver ID"),
     alternative_stop_lap: int = Query(..., description="Alternative pit stop lap"),
-    db: AsyncSession = Depends(get_db_session)
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Simulate alternative pit stop strategy"""
     try:
@@ -211,12 +226,12 @@ async def simulate_pit_stop_strategy(
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": {"code": "INVALID_INPUT", "message": str(e)}}
+            detail={"error": {"code": "INVALID_INPUT", "message": str(e)}},
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": {"code": "SIMULATION_ERROR", "message": str(e)}}
+            detail={"error": {"code": "SIMULATION_ERROR", "message": str(e)}},
         )
 
 
@@ -225,7 +240,7 @@ async def simulate_overtake_strategy(
     race_id: int = Query(..., description="Race ID"),
     driver_id: int = Query(..., description="Driver ID"),
     target_driver_id: int = Query(..., description="Target driver to overtake"),
-    db: AsyncSession = Depends(get_db_session)
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Analyze overtaking opportunities"""
     try:
@@ -236,7 +251,7 @@ async def simulate_overtake_strategy(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": {"code": "SIMULATION_ERROR", "message": str(e)}}
+            detail={"error": {"code": "SIMULATION_ERROR", "message": str(e)}},
         )
 
 
@@ -245,7 +260,7 @@ async def simulate_defense_strategy(
     race_id: int = Query(..., description="Race ID"),
     driver_id: int = Query(..., description="Driver ID"),
     attacking_driver_id: int = Query(..., description="Attacking driver ID"),
-    db: AsyncSession = Depends(get_db_session)
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Calculate defense position strategy"""
     try:
@@ -256,7 +271,7 @@ async def simulate_defense_strategy(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": {"code": "SIMULATION_ERROR", "message": str(e)}}
+            detail={"error": {"code": "SIMULATION_ERROR", "message": str(e)}},
         )
 
 
@@ -266,7 +281,7 @@ async def simulate_weather_strategy(
     driver_id: int = Query(..., description="Driver ID"),
     current_weather: str = Query(..., description="Current weather"),
     expected_weather: str = Query(..., description="Expected weather"),
-    db: AsyncSession = Depends(get_db_session)
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Calculate weather adaptation strategy"""
     try:
@@ -277,5 +292,5 @@ async def simulate_weather_strategy(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": {"code": "SIMULATION_ERROR", "message": str(e)}}
+            detail={"error": {"code": "SIMULATION_ERROR", "message": str(e)}},
         )

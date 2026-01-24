@@ -41,7 +41,9 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "pitline_corner"
     POSTGRES_PORT: str = "5432"
-    DATABASE_URL: Optional[str] = "sqlite+aiosqlite:///./f1_data.db"  # SQLite for development
+    DATABASE_URL: Optional[str] = (
+        "sqlite+aiosqlite:///./f1_data.db"  # SQLite for development
+    )
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod

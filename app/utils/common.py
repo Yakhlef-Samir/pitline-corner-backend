@@ -5,47 +5,45 @@ from typing import Optional
 
 def validate_email(email: str) -> bool:
     """Validate email format"""
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return re.match(pattern, email) is not None
 
 
 def validate_password_strength(password: str) -> dict:
     """Validate password strength and return feedback"""
-    feedback = {
-        "is_valid": True,
-        "errors": [],
-        "score": 0
-    }
-    
+    feedback = {"is_valid": True, "errors": [], "score": 0}
+
     if len(password) < 8:
         feedback["errors"].append("Password must be at least 8 characters long")
         feedback["is_valid"] = False
     else:
         feedback["score"] += 1
-    
-    if not re.search(r'[A-Z]', password):
+
+    if not re.search(r"[A-Z]", password):
         feedback["errors"].append("Password must contain at least one uppercase letter")
         feedback["is_valid"] = False
     else:
         feedback["score"] += 1
-    
-    if not re.search(r'[a-z]', password):
+
+    if not re.search(r"[a-z]", password):
         feedback["errors"].append("Password must contain at least one lowercase letter")
         feedback["is_valid"] = False
     else:
         feedback["score"] += 1
-    
-    if not re.search(r'\d', password):
+
+    if not re.search(r"\d", password):
         feedback["errors"].append("Password must contain at least one number")
         feedback["is_valid"] = False
     else:
         feedback["score"] += 1
-    
+
     if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-        feedback["errors"].append("Password must contain at least one special character")
+        feedback["errors"].append(
+            "Password must contain at least one special character"
+        )
     else:
         feedback["score"] += 1
-    
+
     return feedback
 
 

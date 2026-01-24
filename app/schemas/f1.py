@@ -4,6 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from typing_extensions import Literal
 
+
 # Base schemas
 class BaseSchema(BaseModel):
     model_config = {"from_attributes": True}
@@ -20,7 +21,9 @@ class CircuitBase(BaseSchema):
     country: str = Field(..., description="Country where circuit is located")
     length_km: float = Field(..., description="Circuit length in kilometers")
     turns: int = Field(..., description="Number of turns in the circuit")
-    track_map_data: Optional[str] = Field(None, description="Track map data (JSON or base64)")
+    track_map_data: Optional[str] = Field(
+        None, description="Track map data (JSON or base64)"
+    )
 
 
 class CircuitCreate(CircuitBase):
@@ -91,7 +94,9 @@ class RaceList(BaseSchema):
 class RaceDriverBase(BaseSchema):
     final_position: Optional[int] = Field(None, description="Final finishing position")
     grid_position: Optional[int] = Field(None, description="Starting grid position")
-    status: Optional[str] = Field(None, description="Driver status (finished, retired, etc.)")
+    status: Optional[str] = Field(
+        None, description="Driver status (finished, retired, etc.)"
+    )
 
 
 class RaceDriverResponse(RaceDriverBase, TimestampedSchema):
@@ -115,8 +120,12 @@ class LapDataBase(BaseSchema):
     sector_times: SectorTimes = Field(..., description="Individual sector times")
     tire_compound: TireCompound = Field(..., description="Tire compound used")
     tire_age: int = Field(..., description="Number of laps on this tire")
-    gap_to_leader: Optional[float] = Field(None, description="Gap to race leader in seconds")
-    gap_to_ahead: Optional[float] = Field(None, description="Gap to car ahead in seconds")
+    gap_to_leader: Optional[float] = Field(
+        None, description="Gap to race leader in seconds"
+    )
+    gap_to_ahead: Optional[float] = Field(
+        None, description="Gap to car ahead in seconds"
+    )
 
 
 class LapDataCreate(LapDataBase):
@@ -148,8 +157,12 @@ class PitStopBase(BaseSchema):
     stop_number: int = Field(..., description="Pit stop number")
     lap: int = Field(..., description="Lap number when pit stop occurred")
     duration_seconds: float = Field(..., description="Pit stop duration in seconds")
-    tire_compound_before: Optional[TireCompound] = Field(None, description="Tire compound before stop")
-    tire_compound_after: TireCompound = Field(..., description="Tire compound after stop")
+    tire_compound_before: Optional[TireCompound] = Field(
+        None, description="Tire compound before stop"
+    )
+    tire_compound_after: TireCompound = Field(
+        ..., description="Tire compound after stop"
+    )
 
 
 class PitStopCreate(PitStopBase):
@@ -173,22 +186,36 @@ class SimulationRequest(BaseSchema):
     race_id: int = Field(..., description="Race ID for simulation")
     driver_id: int = Field(..., description="Driver ID for simulation")
     alternative_stop_lap: int = Field(..., description="Alternative pit stop lap")
-    alternative_tire_compound: TireCompound = Field(..., description="Alternative tire compound")
+    alternative_tire_compound: TireCompound = Field(
+        ..., description="Alternative tire compound"
+    )
 
 
 class SimulationMetadata(BaseSchema):
-    calculation_time_ms: int = Field(..., description="Time taken for calculation in milliseconds")
-    traffic_affected: bool = Field(..., description="Whether traffic affected the simulation")
-    confidence_score: float = Field(..., ge=0.0, le=1.0, description="Confidence score of prediction")
+    calculation_time_ms: int = Field(
+        ..., description="Time taken for calculation in milliseconds"
+    )
+    traffic_affected: bool = Field(
+        ..., description="Whether traffic affected the simulation"
+    )
+    confidence_score: float = Field(
+        ..., ge=0.0, le=1.0, description="Confidence score of prediction"
+    )
 
 
 class SimulationResult(BaseSchema):
     predicted_position: int = Field(..., description="Predicted finishing position")
     predicted_gap: float = Field(..., description="Predicted gap to winner in seconds")
-    actual_position: Optional[int] = Field(None, description="Actual finishing position (if race completed)")
-    actual_gap: Optional[float] = Field(None, description="Actual gap to winner (if race completed)")
+    actual_position: Optional[int] = Field(
+        None, description="Actual finishing position (if race completed)"
+    )
+    actual_gap: Optional[float] = Field(
+        None, description="Actual gap to winner (if race completed)"
+    )
     position_delta: Optional[int] = Field(None, description="Position change vs actual")
-    gap_delta: Optional[float] = Field(None, description="Gap change vs actual in seconds")
+    gap_delta: Optional[float] = Field(
+        None, description="Gap change vs actual in seconds"
+    )
     metadata: SimulationMetadata = Field(..., description="Simulation metadata")
 
 

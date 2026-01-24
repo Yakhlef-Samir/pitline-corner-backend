@@ -13,9 +13,12 @@ from sqlalchemy import select
 
 from app.models.f1 import Race, Driver, Circuit, LapData, PitStop, RaceDriver
 from app.schemas.f1 import (
-    RaceResponse, RaceList,
-    DriverResponse, DriverList,
-    SeasonResponse, SeasonList
+    RaceResponse,
+    RaceList,
+    DriverResponse,
+    DriverList,
+    SeasonResponse,
+    SeasonList,
 )
 
 
@@ -64,19 +67,27 @@ class TracingInsightsService:
         Returns list of race dictionaries with name and folder structure
         """
         if season not in self.AVAILABLE_SEASONS:
-            raise ValueError(f"Season {season} not available. Available: {self.AVAILABLE_SEASONS}")
+            raise ValueError(
+                f"Season {season} not available. Available: {self.AVAILABLE_SEASONS}"
+            )
 
         # Map of season to known races (this could be dynamically fetched from GitHub API)
         # For now, using 2024 as reference
         if season == 2024:
             return [
                 {"name": "Bahrain Grand Prix", "folder": "Bahrain Grand Prix"},
-                {"name": "Saudi Arabian Grand Prix", "folder": "Saudi Arabian Grand Prix"},
+                {
+                    "name": "Saudi Arabian Grand Prix",
+                    "folder": "Saudi Arabian Grand Prix",
+                },
                 {"name": "Australian Grand Prix", "folder": "Australian Grand Prix"},
                 {"name": "Japanese Grand Prix", "folder": "Japanese Grand Prix"},
                 {"name": "Chinese Grand Prix", "folder": "Chinese Grand Prix"},
                 {"name": "Miami Grand Prix", "folder": "Miami Grand Prix"},
-                {"name": "Emilia Romagna Grand Prix", "folder": "Emilia Romagna Grand Prix"},
+                {
+                    "name": "Emilia Romagna Grand Prix",
+                    "folder": "Emilia Romagna Grand Prix",
+                },
                 {"name": "Monaco Grand Prix", "folder": "Monaco Grand Prix"},
                 {"name": "Canadian Grand Prix", "folder": "Canadian Grand Prix"},
                 {"name": "Spanish Grand Prix", "folder": "Spanish Grand Prix"},
@@ -88,7 +99,10 @@ class TracingInsightsService:
                 {"name": "Italian Grand Prix", "folder": "Italian Grand Prix"},
                 {"name": "Azerbaijan Grand Prix", "folder": "Azerbaijan Grand Prix"},
                 {"name": "Singapore Grand Prix", "folder": "Singapore Grand Prix"},
-                {"name": "United States Grand Prix", "folder": "United States Grand Prix"},
+                {
+                    "name": "United States Grand Prix",
+                    "folder": "United States Grand Prix",
+                },
                 {"name": "Mexico City Grand Prix", "folder": "Mexico City Grand Prix"},
                 {"name": "São Paulo Grand Prix", "folder": "São Paulo Grand Prix"},
                 {"name": "Las Vegas Grand Prix", "folder": "Las Vegas Grand Prix"},
@@ -100,10 +114,7 @@ class TracingInsightsService:
             return []
 
     async def download_race_telemetry(
-        self,
-        season: int,
-        race_folder: str,
-        driver_code: str
+        self, season: int, race_folder: str, driver_code: str
     ) -> Dict[str, Any]:
         """
         Download race telemetry for a specific driver
@@ -121,12 +132,16 @@ class TracingInsightsService:
             "laptimes": laptimes,
         }
 
-    async def download_race_drivers_list(self, season: int, race_folder: str) -> List[str]:
+    async def download_race_drivers_list(
+        self, season: int, race_folder: str
+    ) -> List[str]:
         """
         Get list of driver codes for a race
         Note: Requires fetching drivers.json from race folder
         """
-        drivers_url = f"{self.RAW_BASE_URL}/{season}/main/{race_folder}/Race/drivers.json"
+        drivers_url = (
+            f"{self.RAW_BASE_URL}/{season}/main/{race_folder}/Race/drivers.json"
+        )
 
         try:
             drivers_data = await self._make_request(drivers_url)
@@ -136,9 +151,28 @@ class TracingInsightsService:
         except Exception as e:
             print(f"Could not fetch drivers list: {e}")
             # Fallback: return common 2024 driver codes
-            return ["VER", "PER", "HAM", "RUS", "LEC", "SAI", "NOR", "PIA",
-                    "ALO", "STR", "GAS", "OCO", "ALB", "SAR", "HUL", "MAG",
-                    "TSU", "RIC", "BOT", "ZHO"]
+            return [
+                "VER",
+                "PER",
+                "HAM",
+                "RUS",
+                "LEC",
+                "SAI",
+                "NOR",
+                "PIA",
+                "ALO",
+                "STR",
+                "GAS",
+                "OCO",
+                "ALB",
+                "SAR",
+                "HUL",
+                "MAG",
+                "TSU",
+                "RIC",
+                "BOT",
+                "ZHO",
+            ]
 
     async def import_race_to_db(
         self,
@@ -146,7 +180,7 @@ class TracingInsightsService:
         season: int,
         round_number: int,
         race_name: str,
-        race_folder: str
+        race_folder: str,
     ):
         """
         Import complete race data to database
@@ -165,7 +199,9 @@ class TracingInsightsService:
         all_lap_data = []
         for driver_code in driver_codes:
             try:
-                telemetry = await self.download_race_telemetry(season, race_folder, driver_code)
+                telemetry = await self.download_race_telemetry(
+                    season, race_folder, driver_code
+                )
                 all_lap_data.append(telemetry)
                 print(f"  Downloaded data for {driver_code}")
             except Exception as e:
@@ -190,7 +226,7 @@ class TracingInsightsService:
                     season=season,
                     round_number=idx,
                     race_name=race["name"],
-                    race_folder=race["folder"]
+                    race_folder=race["folder"],
                 )
             except Exception as e:
                 print(f"Failed to import {race['name']}: {e}")
@@ -211,7 +247,7 @@ class TracingInsightsService:
                 total_races=24 if year >= 2024 else 22,  # Approximate
                 completed_races=24 if year < datetime.now().year else 0,
                 created_at=datetime.now(),
-                updated_at=None
+                updated_at=None,
             )
             seasons.append(season)
 
@@ -230,7 +266,7 @@ class TracingInsightsService:
             total_races=len(races),
             completed_races=len(races) if year < datetime.now().year else 0,
             created_at=datetime.now(),
-            updated_at=None
+            updated_at=None,
         )
 
 

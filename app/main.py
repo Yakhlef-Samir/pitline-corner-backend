@@ -58,26 +58,46 @@ async def lifespan(app: FastAPI):
                 # Check if first_name column exists
                 result = await conn.execute(text("PRAGMA table_info(users)"))
                 columns = [row[1] for row in result.fetchall()]
-                
-                if 'first_name' not in columns:
-                    await conn.execute(text("ALTER TABLE users ADD COLUMN first_name VARCHAR(100)"))
-                
-                if 'last_name' not in columns:
-                    await conn.execute(text("ALTER TABLE users ADD COLUMN last_name VARCHAR(100)"))
-                
-                if 'display_name' not in columns:
-                    await conn.execute(text("ALTER TABLE users ADD COLUMN display_name VARCHAR(100)"))
-                
-                if 'country' not in columns:
-                    await conn.execute(text("ALTER TABLE users ADD COLUMN country VARCHAR(50)"))
-                
-                if 'favorite_f1_team' not in columns:
-                    await conn.execute(text("ALTER TABLE users ADD COLUMN favorite_f1_team VARCHAR(50)"))
-                
+
+                if "first_name" not in columns:
+                    await conn.execute(
+                        text("ALTER TABLE users ADD COLUMN first_name VARCHAR(100)")
+                    )
+
+                if "last_name" not in columns:
+                    await conn.execute(
+                        text("ALTER TABLE users ADD COLUMN last_name VARCHAR(100)")
+                    )
+
+                if "display_name" not in columns:
+                    await conn.execute(
+                        text("ALTER TABLE users ADD COLUMN display_name VARCHAR(100)")
+                    )
+
+                if "country" not in columns:
+                    await conn.execute(
+                        text("ALTER TABLE users ADD COLUMN country VARCHAR(50)")
+                    )
+
+                if "favorite_f1_team" not in columns:
+                    await conn.execute(
+                        text(
+                            "ALTER TABLE users ADD COLUMN favorite_f1_team VARCHAR(50)"
+                        )
+                    )
+
                 # Create indexes if they don't exist (SQLite automatically handles duplicates)
-                await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_users_display_name ON users(display_name)"))
-                await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_users_favorite_team ON users(favorite_f1_team)"))
-                
+                await conn.execute(
+                    text(
+                        "CREATE INDEX IF NOT EXISTS idx_users_display_name ON users(display_name)"
+                    )
+                )
+                await conn.execute(
+                    text(
+                        "CREATE INDEX IF NOT EXISTS idx_users_favorite_team ON users(favorite_f1_team)"
+                    )
+                )
+
             except Exception as alter_error:
                 # Ignore column addition errors (might already exist)
                 pass
