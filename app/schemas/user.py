@@ -13,6 +13,12 @@ class UserCreate(UserBase):
     password_confirm: str = Field(..., min_length=8)
 
 
+class UserLogin(UserBase):
+    """Login request schema"""
+
+    password: str
+
+
 class UserResponse(UserBase):
     id: int
     tier: str = "freemium"

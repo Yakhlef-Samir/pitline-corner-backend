@@ -5,10 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.security import create_access_token
+from app.core.security import create_access_token, verify_password
 from app.crud import create_user, get_user_by_email
 from app.schemas.common import ApiResponse
-from app.schemas.user import AuthData, UserCreate, UserPublic
+from app.schemas.user import AuthData, UserCreate, UserLogin, UserPublic
 
 router = APIRouter()
 
@@ -58,6 +58,60 @@ async def register(
 
     # Create user
     user = await create_user(db, user_in)
+
+    # Create access token
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+
+    # Build response with user info
+    auth_data = AuthData(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserPublic.model_validate(user),
+    )
+
+    return ApiResponse(data=auth_data)
+
+
+@router.post("/login", response_model=ApiResponse[AuthData])
+async def login(
+    credentials: UserLogin,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Login with email and password.
+
+    - **email**: User email address
+    - **password**: User password
+
+    Returns wrapped response with user info and JWT token.
+    """
+    # Get user by email
+    user = await get_user_by_email(db, credentials.email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": {
+                    "code": "INVALID_CREDENTIALS",
+                    "message": "Email ou mot de passe incorrect",
+                }
+            },
+        )
+
+    # Verify password
+    if not verify_password(credentials.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": {
+                    "code": "INVALID_CREDENTIALS",
+                    "message": "Email ou mot de passe incorrect",
+                }
+            },
+        )
 
     # Create access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
